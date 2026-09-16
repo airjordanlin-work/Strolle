@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:strolle/models/progress.dart';
+import 'package:strolle/models/section_priority.dart';
 import 'package:strolle/models/streak_status.dart';
 import 'package:strolle/screens/home_screen.dart';
 import 'package:strolle/theme/app_theme.dart';
@@ -16,6 +17,8 @@ void main() {
         streak: StreakStatus.sample(),
         queueSummary: SessionQueueSummary.sample(),
         skillStats: SkillStat.sampleSet(),
+        targetScore: 1350,
+        sectionPriority: SectionPriority.math,
         onStartSession: onStartSession,
         onShareProgress: onShareProgress ?? () {},
       ),
@@ -36,7 +39,9 @@ void main() {
     expect(find.text('Small reps add up.'), findsOneWidget);
 
     // b. streak signal
-    expect(find.textContaining('day streak'), findsOneWidget);
+    expect(find.text('Streak'), findsOneWidget);
+    expect(find.text('${StreakStatus.sample().currentStreakDays}'), findsOneWidget);
+    expect(find.text('days'), findsOneWidget);
     expect(find.byKey(const Key('shareProgressButton')), findsOneWidget);
 
     // c. start session
@@ -47,9 +52,13 @@ void main() {
     expect(find.text('Reading comprehension'), findsOneWidget);
     expect(find.text('Grammar & usage'), findsOneWidget);
 
-    // e. weekly reps footer
+    // e. weekly reps tile
     expect(find.text('THIS WEEK'), findsOneWidget);
     expect(find.textContaining('reps'), findsWidgets);
+
+    // score-goal tile
+    expect(find.text('GOAL'), findsOneWidget);
+    expect(find.text('1350'), findsOneWidget);
   });
 
   testWidgets('Start session fires onStartSession', (tester) async {
