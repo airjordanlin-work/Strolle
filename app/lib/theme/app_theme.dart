@@ -90,47 +90,72 @@ class AppTheme {
       outline: hairline,
     );
 
+    // Tabular figures everywhere a number might land (streak, accuracy %,
+    // reps, the weekly grid, target score) so digits don't jitter as they
+    // change. A no-op on non-numeric text, so it's safe to apply to every
+    // style rather than tracking down each numeric call site.
+    const numerals = [FontFeature.tabularFigures()];
+
     final textTheme = TextTheme(
-      // display — the one big number per screen (streak, score).
+      // display — the one big number per screen (streak, score). Set
+      // heavier and larger than a default hero would be, with the tight
+      // tracking/line-height serif display sizes need or they read as
+      // loose and accidental rather than deliberately set.
       displayLarge: GoogleFonts.fraunces(
-        fontSize: 34, fontWeight: FontWeight.w700, height: 1.1, color: ink),
+        fontSize: 40, fontWeight: FontWeight.w700, height: 1.08,
+        letterSpacing: -1.2, color: ink, fontFeatures: numerals),
       displayMedium: GoogleFonts.fraunces(
-        fontSize: 34, fontWeight: FontWeight.w700, height: 1.1, color: ink),
+        fontSize: 40, fontWeight: FontWeight.w700, height: 1.08,
+        letterSpacing: -1.2, color: ink, fontFeatures: numerals),
       displaySmall: GoogleFonts.fraunces(
-        fontSize: 34, fontWeight: FontWeight.w700, height: 1.1, color: ink),
-      // headline — screen titles, section-defining moments.
+        fontSize: 40, fontWeight: FontWeight.w700, height: 1.08,
+        letterSpacing: -1.2, color: ink, fontFeatures: numerals),
+      // headline — screen titles, section-defining moments. A clear step
+      // down from display in both size and weight, still confident.
       headlineLarge: GoogleFonts.fraunces(
-        fontSize: 26, fontWeight: FontWeight.w600, height: 1.2, color: ink),
+        fontSize: 28, fontWeight: FontWeight.w600, height: 1.15,
+        letterSpacing: -0.5, color: ink, fontFeatures: numerals),
       headlineMedium: GoogleFonts.fraunces(
-        fontSize: 26, fontWeight: FontWeight.w600, height: 1.2, color: ink),
+        fontSize: 28, fontWeight: FontWeight.w600, height: 1.15,
+        letterSpacing: -0.5, color: ink, fontFeatures: numerals),
       headlineSmall: GoogleFonts.fraunces(
-        fontSize: 26, fontWeight: FontWeight.w600, height: 1.2, color: ink),
+        fontSize: 28, fontWeight: FontWeight.w600, height: 1.15,
+        letterSpacing: -0.5, color: ink, fontFeatures: numerals),
       // title — tile headings.
       titleLarge: GoogleFonts.inter(
-        fontSize: 18, fontWeight: FontWeight.w600, height: 1.3, color: ink),
+        fontSize: 18, fontWeight: FontWeight.w600, height: 1.3,
+        color: ink, fontFeatures: numerals),
       titleMedium: GoogleFonts.inter(
-        fontSize: 18, fontWeight: FontWeight.w600, height: 1.3, color: ink),
+        fontSize: 18, fontWeight: FontWeight.w600, height: 1.3,
+        color: ink, fontFeatures: numerals),
       titleSmall: GoogleFonts.inter(
-        fontSize: 18, fontWeight: FontWeight.w600, height: 1.3, color: ink),
-      // body — default text. bodyMedium is the same step recolored to
-      // Ink-muted for secondary/supporting lines — never invent a
-      // lighter gray at the call site, use this instead.
+        fontSize: 18, fontWeight: FontWeight.w600, height: 1.3,
+        color: ink, fontFeatures: numerals),
+      // body — default text, comfortable line-height, normal spacing.
+      // bodyMedium is the same step recolored to Ink-muted for secondary/
+      // supporting lines — never invent a lighter gray at the call site.
       bodyLarge: GoogleFonts.inter(
-        fontSize: 15, fontWeight: FontWeight.w400, height: 1.5, color: ink),
+        fontSize: 15, fontWeight: FontWeight.w400, height: 1.5,
+        color: ink, fontFeatures: numerals),
       bodyMedium: GoogleFonts.inter(
-        fontSize: 15, fontWeight: FontWeight.w400, height: 1.5, color: inkMuted),
+        fontSize: 15, fontWeight: FontWeight.w400, height: 1.5,
+        color: inkMuted, fontFeatures: numerals),
       bodySmall: GoogleFonts.inter(
-        fontSize: 15, fontWeight: FontWeight.w400, height: 1.5, color: ink),
-      // label — metadata, captions, tile labels.
+        fontSize: 15, fontWeight: FontWeight.w400, height: 1.5,
+        color: ink, fontFeatures: numerals),
+      // label — metadata, captions, tile labels. Smaller than body with
+      // positive tracking, so an uppercase label like "HOW YOU'RE DOING"
+      // reads as a quiet caption instead of a shout.
       labelMedium: GoogleFonts.inter(
-        fontSize: 13, fontWeight: FontWeight.w500, height: 1.3,
-        letterSpacing: 0.6, color: inkMuted),
+        fontSize: 12, fontWeight: FontWeight.w500, height: 1.3,
+        letterSpacing: 0.8, color: inkMuted, fontFeatures: numerals),
       labelSmall: GoogleFonts.inter(
-        fontSize: 13, fontWeight: FontWeight.w500, height: 1.3,
-        letterSpacing: 0.6, color: inkMuted),
+        fontSize: 12, fontWeight: FontWeight.w500, height: 1.3,
+        letterSpacing: 0.8, color: inkMuted, fontFeatures: numerals),
       // button — labelLarge is Material's default button text slot.
       labelLarge: GoogleFonts.inter(
-        fontSize: 15, fontWeight: FontWeight.w600, height: 1.2, color: ink),
+        fontSize: 15, fontWeight: FontWeight.w600, height: 1.2,
+        color: ink, fontFeatures: numerals),
     );
 
     final outlineBorder = OutlineInputBorder(
