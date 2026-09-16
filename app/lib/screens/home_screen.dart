@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
-import '../data/question_repository.dart';
 import '../models/progress.dart';
+import '../models/streak_status.dart';
 import '../theme/app_theme.dart';
 
 /// The calm surface. New material is introduced here, never at the gate.
 ///
 /// Design intent: a page from a well-set study journal, not a dashboard.
-/// One serif headline, one clear action, then quiet data.
+/// Pure widget — every value it shows comes in via constructor, every
+/// interaction goes out via callback. The router/mock data source
+/// (`data/mock_home_data.dart`) is what actually assembles these values.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
-    required this.repo,
-    this.queueSummary,
-    this.skillStats,
+    required this.userName,
+    required this.greeting,
+    required this.encouragement,
+    required this.streak,
+    required this.queueSummary,
+    required this.skillStats,
     this.onStartSession,
+    this.onShareProgress,
   });
 
-  final QuestionRepository repo;
-  final SessionQueueSummary? queueSummary;
-  final List<SkillStat>? skillStats;
+  final String userName;
+  final String greeting;
+  final String encouragement;
+  final StreakStatus streak;
+  final SessionQueueSummary queueSummary;
+  final List<SkillStat> skillStats;
   final VoidCallback? onStartSession;
+  final VoidCallback? onShareProgress;
 
   @override
   Widget build(BuildContext context) {
-    final summary = queueSummary ?? repo.sessionSummary();
-    final stats = skillStats ?? repo.skillStats();
-
     return Scaffold(
       body: SafeArea(
         child: PageBody(
@@ -33,13 +40,20 @@ class HomeScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(
                 AppTheme.gutter, 32, AppTheme.gutter, 56),
             children: [
-              const _Header(),
+              _Header(
+                greeting: greeting,
+                userName: userName,
+                encouragement: encouragement,
+              ),
               const SizedBox(height: 28),
-              _StreakStrip(summary: summary),
+              _StreakSignal(streak: streak, onShareProgress: onShareProgress),
               const SizedBox(height: 32),
-              _SessionInvite(summary: summary, onStartSession: onStartSession),
+              _SessionInvite(
+                  summary: queueSummary, onStartSession: onStartSession),
               const SizedBox(height: 44),
-              _ProgressSection(stats: stats),
+              _ProgressSection(stats: skillStats),
+              const SizedBox(height: 44),
+              _WeeklyRepsFooter(summary: queueSummary),
             ],
           ),
         ),
@@ -49,7 +63,15 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header();
+  const _Header({
+    required this.greeting,
+    required this.userName,
+    required this.encouragement,
+  });
+
+  final String greeting;
+  final String userName;
+  final String encouragement;
 
   @override
   Widget build(BuildContext context) {
@@ -57,37 +79,22 @@ class _Header extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_formatDate(DateTime.now()).toUpperCase(), style: t.labelSmall),
-        const SizedBox(height: 12),
-        Text('New material', style: t.displaySmall),
+        Text('$greeting, $userName', style: t.displaySmall),
         const SizedBox(height: 10),
-        Text(
-          "Nothing here shows up at the gate until you've met it once, "
-          'on your own time.',
-          style: t.bodyMedium,
-        ),
+        Text(encouragement, style: t.bodyMedium),
       ],
     );
   }
 }
 
-/// The counterweight to friction: reps have to visibly accumulate or the
-/// questions read as pure tax. Streak leads because it is the number
-/// people actually protect.
-class _StreakStrip extends StatelessWidget {
-  const _StreakStrip({required this.summary});
-  final SessionQueueSummary summary;
+/// The emotional centerpiece: reps have to visibly accumulate or the
+/// gate questions read as pure tax. Celebratory, calm, never red — a
+/// missed day is a nudge, not a failure state.
+class _StreakSignal extends StatelessWidget {
+  const _StreakSignal({required this.streak, this.onShareProgress});
 
-  static const _labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
-  int get _streak {
-    var n = 0;
-    for (final active in summary.activeDays.reversed) {
-      if (!active) break;
-      n++;
-    }
-    return n;
-  }
+  final StreakStatus streak;
+  final VoidCallback? onShareProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -103,60 +110,41 @@ class _StreakStrip extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text('$_streak',
-                      style: t.displaySmall
-                          ?.copyWith(fontSize: 40, color: scheme.primary)),
-                  const SizedBox(width: 6),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(_streak == 1 ? 'day' : 'days',
-                        style: t.bodyMedium),
-                  ),
-                ],
-              ),
-              Text('${summary.repsThisWeek} reps this week',
-                  style: t.bodyMedium),
-            ],
-          ),
-          const Spacer(),
-          Row(
-            children: [
-              for (var i = 0; i < 7; i++)
-                Padding(
-                  padding: const EdgeInsets.only(left: 7),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: summary.activeDays[i]
-                              ? scheme.primary
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: summary.activeDays[i]
-                                ? scheme.primary
-                                : scheme.outlineVariant,
-                            width: 1.3,
-                          ),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.local_fire_department,
+                        color: scheme.primary, size: 22),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        '${streak.currentStreakDays} day streak',
+                        style: t.titleLarge,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
-                      Text(_labels[i],
-                          style: t.labelSmall?.copyWith(letterSpacing: 0)),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  streak.isSafeToday
+                      ? 'Streak safe today'
+                      : '${streak.repsRemainingToday} reps to keep it',
+                  style: t.bodyMedium?.copyWith(color: scheme.primary),
+                ),
+              ],
+            ),
           ),
+          if (onShareProgress != null)
+            IconButton(
+              key: const Key('shareProgressButton'),
+              tooltip: 'Share my progress',
+              onPressed: onShareProgress,
+              icon: Icon(Icons.ios_share, color: scheme.onSurfaceVariant),
+            ),
         ],
       ),
     );
@@ -214,7 +202,7 @@ class _ProgressSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('HOW YOU\u2019RE DOING', style: t.labelSmall),
+        Text('HOW YOU’RE DOING', style: t.labelSmall),
         const SizedBox(height: 20),
         for (final s in stats) ...[
           _SkillBar(stat: s),
@@ -275,7 +263,7 @@ class _SkillBar extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '${(stat.accuracy * 100).round()}% accuracy  \u00b7  '
+          '${(stat.accuracy * 100).round()}% accuracy  ·  '
           '${stat.repsLogged} reps',
           style: t.bodyMedium?.copyWith(fontSize: 13),
         ),
@@ -284,9 +272,59 @@ class _SkillBar extends StatelessWidget {
   }
 }
 
-String _formatDate(DateTime d) {
-  const w = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const m = ['January','February','March','April','May','June','July',
-             'August','September','October','November','December'];
-  return '${w[d.weekday - 1]}, ${m[d.month - 1]} ${d.day}';
+/// Seven-day rep squares. Split out from the streak signal so the streak
+/// (celebratory, front and center) and the raw weekly log (quiet detail)
+/// don't compete for attention.
+class _WeeklyRepsFooter extends StatelessWidget {
+  const _WeeklyRepsFooter({required this.summary});
+  final SessionQueueSummary summary;
+
+  static const _labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('THIS WEEK', style: t.labelSmall),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Text('${summary.repsThisWeek} reps', style: t.bodyMedium),
+            const Spacer(),
+            for (var i = 0; i < 7; i++)
+              Padding(
+                padding: const EdgeInsets.only(left: 7),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: summary.activeDays[i]
+                            ? scheme.primary
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: summary.activeDays[i]
+                              ? scheme.primary
+                              : scheme.outlineVariant,
+                          width: 1.3,
+                        ),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(_labels[i],
+                        style: t.labelSmall?.copyWith(letterSpacing: 0)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
 }
