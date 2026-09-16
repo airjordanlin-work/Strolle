@@ -101,6 +101,8 @@ class HomeScreenRoute extends StatelessWidget {
       streak: data.streak,
       queueSummary: data.queueSummary,
       skillStats: data.skillStats,
+      targetScore: data.targetScore,
+      sectionPriority: data.sectionPriority,
       onShareProgress: () => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sharing is not wired up yet.')),
       ),

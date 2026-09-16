@@ -1,4 +1,5 @@
 import '../models/progress.dart';
+import '../models/section_priority.dart';
 import '../models/streak_status.dart';
 import '../state/session_user.dart';
 
@@ -16,6 +17,8 @@ class HomeScreenData {
     required this.streak,
     required this.queueSummary,
     required this.skillStats,
+    required this.targetScore,
+    required this.sectionPriority,
   });
 
   final String userName;
@@ -24,6 +27,10 @@ class HomeScreenData {
   final StreakStatus streak;
   final SessionQueueSummary queueSummary;
   final List<SkillStat> skillStats;
+
+  /// Echoes onboarding's target-score step on the score-goal tile.
+  final int targetScore;
+  final SectionPriority sectionPriority;
 }
 
 const _encouragementLines = [
@@ -55,5 +62,7 @@ HomeScreenData buildMockHomeData(SessionUser? user, {DateTime? now}) {
     streak: StreakStatus.sample(),
     queueSummary: SessionQueueSummary.sample(),
     skillStats: SkillStat.sampleSet(),
+    targetScore: 1350,
+    sectionPriority: SectionPriority.math,
   );
 }
