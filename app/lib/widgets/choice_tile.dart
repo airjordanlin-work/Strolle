@@ -35,12 +35,13 @@ class ChoiceTile extends StatelessWidget {
           scheme.onPrimaryContainer,
           scheme.primary,
         ),
-      // Success green, not the seed colour, because "you got it" should
-      // read instantly without parsing.
+      // Forest is the designated "correct/positive" token — not a
+      // separate success green — so this stays inside the two-accent
+      // discipline.
       ChoiceState.correct => (
-          const Color(0xFF16A34A).withValues(alpha: 0.15),
-          scheme.onSurface,
-          const Color(0xFF16A34A),
+          scheme.primaryContainer,
+          scheme.onPrimaryContainer,
+          scheme.primary,
         ),
       // Muted, not alarming. A wrong answer still gets you in, so it
       // should not look like a failure state.
@@ -52,24 +53,24 @@ class ChoiceTile extends StatelessWidget {
     };
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppTheme.space8),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radius),
+          borderRadius: BorderRadius.circular(AppTheme.radiusControl),
           child: AnimatedContainer(
             duration: AppTheme.motion,
             curve: Curves.easeOut,
             constraints:
                 const BoxConstraints(minHeight: AppTheme.tapTarget),
             padding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 14,
+              horizontal: AppTheme.space16,
+              vertical: AppTheme.space12,
             ),
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(AppTheme.radius),
+              borderRadius: BorderRadius.circular(AppTheme.radiusControl),
               border: Border.all(color: border, width: 1.5),
             ),
             alignment: Alignment.centerLeft,

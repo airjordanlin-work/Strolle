@@ -22,10 +22,10 @@ class ExplanationPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppTheme.space16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(AppTheme.radius),
+        borderRadius: BorderRadius.circular(AppTheme.radiusTile),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
@@ -34,11 +34,10 @@ class ExplanationPanel extends StatelessWidget {
           Text(
             correctChoice,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFF16A34A),
-                  fontWeight: FontWeight.w600,
+                  color: scheme.primary,
                 ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppTheme.space8),
           Text(
             explanation,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
