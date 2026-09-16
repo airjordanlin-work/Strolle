@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
+import '../models/section_priority.dart';
 
-/// Which of the two sections the user wants to prioritize first.
-/// Feeds a future section-priority signal server-side; purely a
-/// motivating framing question at this stage, not an ability judgment.
-enum SectionPriority { math, readingWriting }
+export '../models/section_priority.dart' show SectionPriority;
 
 const int kMinTargetScore = 400;
 const int kMaxTargetScore = 1600;

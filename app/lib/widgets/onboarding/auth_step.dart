@@ -64,14 +64,14 @@ class _AuthStepState extends State<AuthStep> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(isSignUp ? 'Create your account' : 'Welcome back', style: t.headlineSmall),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.space8),
         Text(
           isSignUp
               ? "We'll use this to keep your progress in sync."
               : 'Log in to pick up where you left off.',
           style: t.bodyMedium,
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: AppTheme.space24),
         TextField(
           key: const Key('emailField'),
           controller: _emailController,
@@ -84,7 +84,7 @@ class _AuthStepState extends State<AuthStep> {
             errorText: widget.emailError,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.space16),
         TextField(
           key: const Key('passwordField'),
           controller: _passwordController,
@@ -107,15 +107,12 @@ class _AuthStepState extends State<AuthStep> {
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppTheme.space32),
         Row(
           children: [
             if (widget.onBack != null)
               TextButton(
                 onPressed: widget.onBack,
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(0, AppTheme.tapTarget),
-                ),
                 child: const Text('Back'),
               ),
             const Spacer(),

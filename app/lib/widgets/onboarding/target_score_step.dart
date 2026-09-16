@@ -25,7 +25,6 @@ class TargetScoreStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
     const divisions =
         (kMaxTargetScore - kMinTargetScore) ~/ kTargetScoreStep;
 
@@ -33,18 +32,15 @@ class TargetScoreStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('What are we aiming for?', style: t.headlineSmall),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.space8),
         Text(
           "Just a target to study toward — not a judgment of where "
           "you're starting.",
           style: t.bodyMedium,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.space24),
         Center(
-          child: Text(
-            '$targetScore',
-            style: t.displaySmall?.copyWith(fontSize: 44, color: scheme.primary),
-          ),
+          child: Text('$targetScore', style: t.displaySmall),
         ),
         Slider(
           key: const Key('targetScoreSlider'),
@@ -55,9 +51,9 @@ class TargetScoreStep extends StatelessWidget {
           label: '$targetScore',
           onChanged: (v) => onScoreChanged(v.round()),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: AppTheme.space24),
         Text('Which matters most right now?', style: t.titleMedium),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.space12),
         Row(
           children: [
             Expanded(
@@ -68,7 +64,7 @@ class TargetScoreStep extends StatelessWidget {
                 onTap: () => onPriorityChanged(SectionPriority.math),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTheme.space12),
             Expanded(
               child: _PriorityCard(
                 key: const Key('priorityReadingWriting'),
@@ -79,14 +75,11 @@ class TargetScoreStep extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppTheme.space32),
         Row(
           children: [
             TextButton(
               onPressed: onBack,
-              style: TextButton.styleFrom(
-                minimumSize: const Size(0, AppTheme.tapTarget),
-              ),
               child: const Text('Back'),
             ),
             const Spacer(),
@@ -123,14 +116,22 @@ class _PriorityCard extends StatelessWidget {
 
     return Material(
       color: selected ? scheme.primaryContainer : scheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(AppTheme.radius),
+      borderRadius: BorderRadius.circular(AppTheme.radiusControl),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radius),
+        borderRadius: BorderRadius.circular(AppTheme.radiusControl),
         child: Container(
           constraints: const BoxConstraints(minHeight: AppTheme.tapTarget),
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.space12, vertical: AppTheme.space12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.radiusControl),
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outlineVariant,
+              width: 1.5,
+            ),
+          ),
           child: Text(
             label,
             textAlign: TextAlign.center,

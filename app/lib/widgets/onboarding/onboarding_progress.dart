@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 
 /// Slim "Step X of N" indicator shown at the top of the onboarding flow.
 class OnboardingProgress extends StatelessWidget {
@@ -20,15 +21,15 @@ class OnboardingProgress extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('STEP $currentStep OF $totalSteps', style: t.labelSmall),
-        const SizedBox(height: 8),
+        Text('STEP $currentStep OF $totalSteps', style: t.labelMedium),
+        const SizedBox(height: AppTheme.space8),
         Row(
           children: [
             for (var i = 0; i < totalSteps; i++)
               Expanded(
                 child: Container(
                   margin:
-                      EdgeInsets.only(right: i == totalSteps - 1 ? 0 : 6),
+                      EdgeInsets.only(right: i == totalSteps - 1 ? 0 : AppTheme.space8),
                   height: 4,
                   decoration: BoxDecoration(
                     color: i < currentStep

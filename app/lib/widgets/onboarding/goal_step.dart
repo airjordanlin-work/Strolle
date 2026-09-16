@@ -44,15 +44,15 @@ class GoalStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('Let’s make it a habit', style: t.headlineSmall),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.space8),
         Text(
           'Daily questions goal — this is what keeps your streak alive.',
           style: t.bodyMedium,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.space16),
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: AppTheme.space8,
+          runSpacing: AppTheme.space8,
           children: [
             for (final preset in kDailyGoalPresets)
               ChoiceChip(
@@ -63,19 +63,16 @@ class GoalStep extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppTheme.space32),
         Text('When is your test?', style: t.titleMedium),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppTheme.space12),
         OutlinedButton(
           key: const Key('testDateButton'),
           onPressed: () => _pickDate(context),
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(AppTheme.tapTarget),
-          ),
           child: Text(testDate == null ? 'Pick a date' : _formatDate(testDate!)),
         ),
         if (daysToGo != null) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: AppTheme.space8),
           Text(
             daysToGo >= 0
                 ? '$daysToGo days to go'
@@ -83,14 +80,11 @@ class GoalStep extends StatelessWidget {
             style: t.bodyMedium?.copyWith(color: scheme.primary),
           ),
         ],
-        const SizedBox(height: 32),
+        const SizedBox(height: AppTheme.space32),
         Row(
           children: [
             TextButton(
               onPressed: onBack,
-              style: TextButton.styleFrom(
-                minimumSize: const Size(0, AppTheme.tapTarget),
-              ),
               child: const Text('Back'),
             ),
             const Spacer(),

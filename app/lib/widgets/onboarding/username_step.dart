@@ -46,12 +46,12 @@ class _UsernameStepState extends State<UsernameStep> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('Pick a username', style: t.headlineSmall),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppTheme.space8),
         Text(
           'What should we call you? You can change this later.',
           style: t.bodyMedium,
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: AppTheme.space24),
         TextField(
           key: const Key('usernameField'),
           controller: _controller,
@@ -66,14 +66,11 @@ class _UsernameStepState extends State<UsernameStep> {
             errorText: widget.error,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppTheme.space32),
         Row(
           children: [
             TextButton(
               onPressed: widget.onBack,
-              style: TextButton.styleFrom(
-                minimumSize: const Size(0, AppTheme.tapTarget),
-              ),
               child: const Text('Back'),
             ),
             const Spacer(),
