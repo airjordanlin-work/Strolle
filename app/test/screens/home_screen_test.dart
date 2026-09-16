@@ -33,6 +33,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
 
     // a. personal header
     expect(find.text('Good evening, Ryder'), findsOneWidget);
@@ -64,6 +65,7 @@ void main() {
   testWidgets('Start session fires onStartSession', (tester) async {
     var tapped = false;
     await tester.pumpWidget(harness(onStartSession: () => tapped = true));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(FilledButton, 'Start session'));
     expect(tapped, isTrue);
@@ -72,6 +74,7 @@ void main() {
   testWidgets('the share button fires onShareProgress', (tester) async {
     var tapped = false;
     await tester.pumpWidget(harness(onShareProgress: () => tapped = true));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('shareProgressButton')));
     expect(tapped, isTrue);
