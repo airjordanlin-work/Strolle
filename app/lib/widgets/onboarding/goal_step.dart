@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../state/onboarding_state.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/motion.dart';
+import '../motion/editorial_reveal.dart';
+import '../motion/pressable_scale.dart';
 
 /// Step 5 of 5 — the last screen of onboarding. Two commitments: a daily
 /// reps goal and a test date. Finishing calls [onFinish], which the flow
@@ -43,59 +46,83 @@ class GoalStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Let’s make it a habit', style: t.headlineSmall),
-        const SizedBox(height: AppTheme.space8),
-        Text(
-          'Daily questions goal — this is what keeps your streak alive.',
-          style: t.bodyMedium,
+        EditorialReveal(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Let’s make it a habit', style: t.headlineSmall),
+              const SizedBox(height: AppTheme.space8),
+              Text(
+                'Daily questions goal — this is what keeps your streak alive.',
+                style: t.bodyMedium,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppTheme.space16),
-        Wrap(
-          spacing: AppTheme.space8,
-          runSpacing: AppTheme.space8,
-          children: [
-            for (final preset in kDailyGoalPresets)
-              ChoiceChip(
-                key: Key('dailyGoal$preset'),
-                label: Text('$preset / day'),
-                selected: dailyGoal == preset,
-                onSelected: (_) => onDailyGoalChanged(preset),
+        EditorialReveal(
+          delay: AppMotion.staggerStep,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: AppTheme.space8,
+                runSpacing: AppTheme.space8,
+                children: [
+                  for (final preset in kDailyGoalPresets)
+                    PressableScale(
+                      child: ChoiceChip(
+                        key: Key('dailyGoal$preset'),
+                        label: Text('$preset / day'),
+                        selected: dailyGoal == preset,
+                        onSelected: (_) => onDailyGoalChanged(preset),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.space32),
-        Text('When is your test?', style: t.titleMedium),
-        const SizedBox(height: AppTheme.space12),
-        OutlinedButton(
-          key: const Key('testDateButton'),
-          onPressed: () => _pickDate(context),
-          child: Text(testDate == null ? 'Pick a date' : _formatDate(testDate!)),
-        ),
-        if (daysToGo != null) ...[
-          const SizedBox(height: AppTheme.space8),
-          Text(
-            daysToGo >= 0
-                ? '$daysToGo days to go'
-                : 'That date has passed — pick a new one',
-            style: t.bodyMedium?.copyWith(color: scheme.primary),
+              const SizedBox(height: AppTheme.space32),
+              Text('When is your test?', style: t.titleMedium),
+              const SizedBox(height: AppTheme.space12),
+              PressableScale(
+                child: OutlinedButton(
+                  key: const Key('testDateButton'),
+                  onPressed: () => _pickDate(context),
+                  child: Text(testDate == null ? 'Pick a date' : _formatDate(testDate!)),
+                ),
+              ),
+              if (daysToGo != null) ...[
+                const SizedBox(height: AppTheme.space8),
+                Text(
+                  daysToGo >= 0
+                      ? '$daysToGo days to go'
+                      : 'That date has passed — pick a new one',
+                  style: t.bodyMedium?.copyWith(color: scheme.primary),
+                ),
+              ],
+            ],
           ),
-        ],
+        ),
         const SizedBox(height: AppTheme.space32),
-        Row(
-          children: [
-            TextButton(
-              onPressed: onBack,
-              child: const Text('Back'),
-            ),
-            const Spacer(),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(120, AppTheme.tapTarget),
+        EditorialReveal(
+          delay: AppMotion.staggerStep * 2,
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: onBack,
+                child: const Text('Back'),
               ),
-              onPressed: onFinish,
-              child: const Text('Start studying'),
-            ),
-          ],
+              const Spacer(),
+              PressableScale(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(120, AppTheme.tapTarget),
+                  ),
+                  onPressed: onFinish,
+                  child: const Text('Start studying'),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

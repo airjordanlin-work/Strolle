@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/motion.dart';
+import '../motion/editorial_reveal.dart';
+import '../motion/pressable_scale.dart';
 
 enum AuthMode { signUp, logIn }
 
@@ -63,73 +66,93 @@ class _AuthStepState extends State<AuthStep> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(isSignUp ? 'Create your account' : 'Welcome back', style: t.headlineSmall),
-        const SizedBox(height: AppTheme.space8),
-        Text(
-          isSignUp
-              ? "We'll use this to keep your progress in sync."
-              : 'Log in to pick up where you left off.',
-          style: t.bodyMedium,
-        ),
-        const SizedBox(height: AppTheme.space24),
-        TextField(
-          key: const Key('emailField'),
-          controller: _emailController,
-          autofocus: true,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          onChanged: widget.onEmailChanged,
-          decoration: InputDecoration(
-            labelText: 'Email',
-            errorText: widget.emailError,
+        EditorialReveal(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(isSignUp ? 'Create your account' : 'Welcome back', style: t.headlineSmall),
+              const SizedBox(height: AppTheme.space8),
+              Text(
+                isSignUp
+                    ? "We'll use this to keep your progress in sync."
+                    : 'Log in to pick up where you left off.',
+                style: t.bodyMedium,
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: AppTheme.space16),
-        TextField(
-          key: const Key('passwordField'),
-          controller: _passwordController,
-          obscureText: _obscurePassword,
-          textInputAction: TextInputAction.done,
-          onChanged: widget.onPasswordChanged,
-          onSubmitted: (_) {
-            if (submittable) widget.onSubmit();
-          },
-          decoration: InputDecoration(
-            labelText: 'Password',
-            errorText: widget.passwordError,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+        const SizedBox(height: AppTheme.space24),
+        EditorialReveal(
+          delay: AppMotion.staggerStep,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                key: const Key('emailField'),
+                controller: _emailController,
+                autofocus: true,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                onChanged: widget.onEmailChanged,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  errorText: widget.emailError,
+                ),
               ),
-              tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-              onPressed: () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
-            ),
+              const SizedBox(height: AppTheme.space16),
+              TextField(
+                key: const Key('passwordField'),
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                textInputAction: TextInputAction.done,
+                onChanged: widget.onPasswordChanged,
+                onSubmitted: (_) {
+                  if (submittable) widget.onSubmit();
+                },
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  errorText: widget.passwordError,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    ),
+                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppTheme.space32),
-        Row(
-          children: [
-            if (widget.onBack != null)
-              TextButton(
-                onPressed: widget.onBack,
-                child: const Text('Back'),
+        EditorialReveal(
+          delay: AppMotion.staggerStep * 2,
+          child: Row(
+            children: [
+              if (widget.onBack != null)
+                TextButton(
+                  onPressed: widget.onBack,
+                  child: const Text('Back'),
+                ),
+              const Spacer(),
+              PressableScale(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(120, AppTheme.tapTarget),
+                  ),
+                  onPressed: submittable ? widget.onSubmit : null,
+                  child: widget.isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.4),
+                        )
+                      : Text(isSignUp ? 'Create account' : 'Log in'),
+                ),
               ),
-            const Spacer(),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(120, AppTheme.tapTarget),
-              ),
-              onPressed: submittable ? widget.onSubmit : null,
-              child: widget.isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2.4),
-                    )
-                  : Text(isSignUp ? 'Create account' : 'Log in'),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

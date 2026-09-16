@@ -37,12 +37,14 @@ void main() {
 
   testWidgets('sign-up mode shows sign-up labels', (tester) async {
     await tester.pumpWidget(harness(mode: AuthMode.signUp));
+    await tester.pumpAndSettle();
     expect(find.text('Create your account'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Create account'), findsOneWidget);
   });
 
   testWidgets('log-in mode shows log-in labels', (tester) async {
     await tester.pumpWidget(harness(mode: AuthMode.logIn));
+    await tester.pumpAndSettle();
     expect(find.text('Welcome back'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Log in'), findsOneWidget);
   });
@@ -50,6 +52,7 @@ void main() {
   testWidgets('submit is disabled until email and password are both valid',
       (tester) async {
     await tester.pumpWidget(harness(mode: AuthMode.signUp, email: 'a@b.com', password: ''));
+    await tester.pumpAndSettle();
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
   });
@@ -62,6 +65,7 @@ void main() {
       password: 'longenough',
       onSubmit: () => submitted = true,
     ));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(FilledButton));
     expect(submitted, isTrue);
@@ -75,6 +79,7 @@ void main() {
       onEmailChanged: (v) => lastEmail = v,
       onPasswordChanged: (v) => lastPassword = v,
     ));
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('emailField')), 'ryder@example.com');
     await tester.enterText(find.byKey(const Key('passwordField')), 'supersecret');
@@ -85,6 +90,7 @@ void main() {
 
   testWidgets('password visibility toggle obscures/reveals text', (tester) async {
     await tester.pumpWidget(harness(mode: AuthMode.signUp, password: 'supersecret'));
+    await tester.pumpAndSettle();
 
     TextField passwordField() =>
         tester.widget<TextField>(find.byKey(const Key('passwordField')));

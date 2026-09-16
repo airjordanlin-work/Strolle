@@ -68,6 +68,7 @@ void main() {
         onOnboardingComplete: () {},
       ),
     ));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.textContaining('Log in'));
     expect(loginRequested, isTrue);

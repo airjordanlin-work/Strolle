@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/motion.dart';
+import '../motion/editorial_reveal.dart';
+import '../motion/pressable_scale.dart';
 
 /// Step 1 of 5. Pure intro copy plus the two ways out: forward into
 /// onboarding, or sideways into the login screen for returning users.
@@ -21,24 +24,39 @@ class WelcomeStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Welcome to Strolle', style: t.headlineSmall),
+        EditorialReveal(
+          child: Text('Welcome to Strolle', style: t.headlineSmall),
+        ),
         const SizedBox(height: AppTheme.space16),
-        Text(
-          'Strolle locks the apps that eat your time behind a few quick '
-          "SAT reps. Get one wrong and you still get in — it just costs "
-          'a little more next time.',
-          style: t.bodyLarge,
+        EditorialReveal(
+          delay: AppMotion.staggerStep,
+          child: Text(
+            'Strolle locks the apps that eat your time behind a few quick '
+            "SAT reps. Get one wrong and you still get in — it just costs "
+            'a little more next time.',
+            style: t.bodyLarge,
+          ),
         ),
         const SizedBox(height: AppTheme.space32),
-        FilledButton(
-          onPressed: onGetStarted,
-          child: const Text('Get started'),
-        ),
-        const SizedBox(height: AppTheme.space16),
-        Center(
-          child: TextButton(
-            onPressed: onLogIn,
-            child: const Text('I already have an account → Log in'),
+        EditorialReveal(
+          delay: AppMotion.staggerStep * 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PressableScale(
+                child: FilledButton(
+                  onPressed: onGetStarted,
+                  child: const Text('Get started'),
+                ),
+              ),
+              const SizedBox(height: AppTheme.space16),
+              Center(
+                child: TextButton(
+                  onPressed: onLogIn,
+                  child: const Text('I already have an account → Log in'),
+                ),
+              ),
+            ],
           ),
         ),
       ],

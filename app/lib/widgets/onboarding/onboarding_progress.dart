@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/motion.dart';
 
 /// Slim "Step X of N" indicator shown at the top of the onboarding flow.
+/// Its fill animates smoothly between steps rather than snapping.
 class OnboardingProgress extends StatelessWidget {
   const OnboardingProgress({
     super.key,
@@ -27,7 +29,9 @@ class OnboardingProgress extends StatelessWidget {
           children: [
             for (var i = 0; i < totalSteps; i++)
               Expanded(
-                child: Container(
+                child: AnimatedContainer(
+                  duration: AppMotion.durationFor(context, AppMotion.stepTransition),
+                  curve: AppMotion.stepCurve,
                   margin:
                       EdgeInsets.only(right: i == totalSteps - 1 ? 0 : AppTheme.space8),
                   height: 4,

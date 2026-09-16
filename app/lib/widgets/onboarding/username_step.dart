@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/motion.dart';
+import '../motion/editorial_reveal.dart';
+import '../motion/pressable_scale.dart';
 
 /// Step 2 of 5. Purely presentational — [error] and [isValid] are
 /// computed upstream by `OnboardingState`; this widget just displays
@@ -45,43 +48,58 @@ class _UsernameStepState extends State<UsernameStep> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Pick a username', style: t.headlineSmall),
-        const SizedBox(height: AppTheme.space8),
-        Text(
-          'What should we call you? You can change this later.',
-          style: t.bodyMedium,
+        EditorialReveal(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Pick a username', style: t.headlineSmall),
+              const SizedBox(height: AppTheme.space8),
+              Text(
+                'What should we call you? You can change this later.',
+                style: t.bodyMedium,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppTheme.space24),
-        TextField(
-          key: const Key('usernameField'),
-          controller: _controller,
-          autofocus: true,
-          textInputAction: TextInputAction.next,
-          onChanged: widget.onChanged,
-          onSubmitted: (_) {
-            if (widget.isValid) widget.onNext();
-          },
-          decoration: InputDecoration(
-            labelText: 'Username',
-            errorText: widget.error,
+        EditorialReveal(
+          delay: AppMotion.staggerStep,
+          child: TextField(
+            key: const Key('usernameField'),
+            controller: _controller,
+            autofocus: true,
+            textInputAction: TextInputAction.next,
+            onChanged: widget.onChanged,
+            onSubmitted: (_) {
+              if (widget.isValid) widget.onNext();
+            },
+            decoration: InputDecoration(
+              labelText: 'Username',
+              errorText: widget.error,
+            ),
           ),
         ),
         const SizedBox(height: AppTheme.space32),
-        Row(
-          children: [
-            TextButton(
-              onPressed: widget.onBack,
-              child: const Text('Back'),
-            ),
-            const Spacer(),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(120, AppTheme.tapTarget),
+        EditorialReveal(
+          delay: AppMotion.staggerStep * 2,
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: widget.onBack,
+                child: const Text('Back'),
               ),
-              onPressed: widget.isValid ? widget.onNext : null,
-              child: const Text('Continue'),
-            ),
-          ],
+              const Spacer(),
+              PressableScale(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(120, AppTheme.tapTarget),
+                  ),
+                  onPressed: widget.isValid ? widget.onNext : null,
+                  child: const Text('Continue'),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

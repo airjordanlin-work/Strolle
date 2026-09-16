@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../state/onboarding_state.dart';
 import '../state/session_user.dart';
 import '../theme/app_theme.dart';
+import '../theme/motion.dart';
 import '../widgets/onboarding/auth_step.dart';
 import '../widgets/onboarding/goal_step.dart';
 import '../widgets/onboarding/onboarding_progress.dart';
@@ -38,6 +39,13 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isSubmittingSignUp = false;
 
+  // Which way the step transition should slide: 1 for forward (Continue),
+  // -1 for back. OnboardingState.notifyListeners() also fires on every
+  // keystroke, not just step changes, so this only updates when the step
+  // index itself has actually moved.
+  late int _lastStepIndex = widget.state.stepIndex;
+  double _direction = 1;
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +58,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _onStateChanged() => setState(() {});
+  void _onStateChanged() {
+    final newIndex = widget.state.stepIndex;
+    if (newIndex != _lastStepIndex) {
+      _direction = newIndex > _lastStepIndex ? 1 : -1;
+      _lastStepIndex = newIndex;
+    }
+    setState(() {});
+  }
+
+  Widget _stepTransitionBuilder(Widget child, Animation<double> animation) {
+    const magnitude = 0.2;
+    final isIncoming = child.key == ValueKey(widget.state.stepIndex);
+    final edgeOffset = Offset(isIncoming ? _direction * magnitude : -_direction * magnitude, 0);
+    final tween = isIncoming
+        ? Tween<Offset>(begin: edgeOffset, end: Offset.zero)
+        : Tween<Offset>(begin: Offset.zero, end: edgeOffset);
+
+    return SlideTransition(
+      position: tween.animate(
+        CurvedAnimation(parent: animation, curve: AppMotion.stepCurve),
+      ),
+      child: FadeTransition(opacity: animation, child: child),
+    );
+  }
 
   Future<void> _submitSignUp() async {
     setState(() => _isSubmittingSignUp = true);
@@ -81,11 +112,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   currentStep: state.stepIndex + 1,
                   totalSteps: OnboardingState.stepCount,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppTheme.space24),
                 Expanded(
                   child: SingleChildScrollView(
                     child: AnimatedSwitcher(
-                      duration: AppTheme.motion,
+                      duration: AppMotion.durationFor(context, AppMotion.stepTransition),
+                      transitionBuilder: _stepTransitionBuilder,
                       child: KeyedSubtree(
                         key: ValueKey(state.stepIndex),
                         child: _buildStep(state),

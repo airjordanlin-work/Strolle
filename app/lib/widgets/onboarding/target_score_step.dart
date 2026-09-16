@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../state/onboarding_state.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/motion.dart';
+import '../motion/editorial_reveal.dart';
+import '../motion/pressable_scale.dart';
 
 /// Step 4 of 5. Two motivating (not evaluative) questions: a target
 /// score and which section matters most right now.
@@ -31,66 +34,90 @@ class TargetScoreStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('What are we aiming for?', style: t.headlineSmall),
-        const SizedBox(height: AppTheme.space8),
-        Text(
-          "Just a target to study toward — not a judgment of where "
-          "you're starting.",
-          style: t.bodyMedium,
+        EditorialReveal(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('What are we aiming for?', style: t.headlineSmall),
+              const SizedBox(height: AppTheme.space8),
+              Text(
+                "Just a target to study toward — not a judgment of where "
+                "you're starting.",
+                style: t.bodyMedium,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppTheme.space24),
-        Center(
-          child: Text('$targetScore', style: t.displaySmall),
-        ),
-        Slider(
-          key: const Key('targetScoreSlider'),
-          value: targetScore.toDouble(),
-          min: kMinTargetScore.toDouble(),
-          max: kMaxTargetScore.toDouble(),
-          divisions: divisions,
-          label: '$targetScore',
-          onChanged: (v) => onScoreChanged(v.round()),
-        ),
-        const SizedBox(height: AppTheme.space24),
-        Text('Which matters most right now?', style: t.titleMedium),
-        const SizedBox(height: AppTheme.space12),
-        Row(
-          children: [
-            Expanded(
-              child: _PriorityCard(
-                key: const Key('priorityMath'),
-                label: 'Math',
-                selected: priority == SectionPriority.math,
-                onTap: () => onPriorityChanged(SectionPriority.math),
+        EditorialReveal(
+          delay: AppMotion.staggerStep,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Text('$targetScore', style: t.displaySmall),
               ),
-            ),
-            const SizedBox(width: AppTheme.space12),
-            Expanded(
-              child: _PriorityCard(
-                key: const Key('priorityReadingWriting'),
-                label: 'Reading & Writing',
-                selected: priority == SectionPriority.readingWriting,
-                onTap: () => onPriorityChanged(SectionPriority.readingWriting),
+              Slider(
+                key: const Key('targetScoreSlider'),
+                value: targetScore.toDouble(),
+                min: kMinTargetScore.toDouble(),
+                max: kMaxTargetScore.toDouble(),
+                divisions: divisions,
+                label: '$targetScore',
+                onChanged: (v) => onScoreChanged(v.round()),
               ),
-            ),
-          ],
+              const SizedBox(height: AppTheme.space24),
+              Text('Which matters most right now?', style: t.titleMedium),
+              const SizedBox(height: AppTheme.space12),
+              Row(
+                children: [
+                  Expanded(
+                    child: PressableScale(
+                      child: _PriorityCard(
+                        key: const Key('priorityMath'),
+                        label: 'Math',
+                        selected: priority == SectionPriority.math,
+                        onTap: () => onPriorityChanged(SectionPriority.math),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.space12),
+                  Expanded(
+                    child: PressableScale(
+                      child: _PriorityCard(
+                        key: const Key('priorityReadingWriting'),
+                        label: 'Reading & Writing',
+                        selected: priority == SectionPriority.readingWriting,
+                        onTap: () => onPriorityChanged(SectionPriority.readingWriting),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: AppTheme.space32),
-        Row(
-          children: [
-            TextButton(
-              onPressed: onBack,
-              child: const Text('Back'),
-            ),
-            const Spacer(),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(120, AppTheme.tapTarget),
+        EditorialReveal(
+          delay: AppMotion.staggerStep * 2,
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: onBack,
+                child: const Text('Back'),
               ),
-              onPressed: onNext,
-              child: const Text('Continue'),
-            ),
-          ],
+              const Spacer(),
+              PressableScale(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(120, AppTheme.tapTarget),
+                  ),
+                  onPressed: onNext,
+                  child: const Text('Continue'),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

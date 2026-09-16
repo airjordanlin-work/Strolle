@@ -27,6 +27,7 @@ void main() {
 
   testWidgets('Continue is disabled for an invalid username', (tester) async {
     await tester.pumpWidget(harness(username: 'ab', onChanged: (_) {}, onNext: () {}));
+    await tester.pumpAndSettle();
 
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
@@ -39,6 +40,7 @@ void main() {
     await tester.pumpWidget(
       harness(username: 'ryder_t', onChanged: (_) {}, onNext: () => nextTapped = true),
     );
+    await tester.pumpAndSettle();
 
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNotNull);
@@ -52,6 +54,7 @@ void main() {
     await tester.pumpWidget(
       harness(username: '', onChanged: (v) => lastValue = v, onNext: () {}),
     );
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('usernameField')), 'ryder');
     expect(lastValue, 'ryder');

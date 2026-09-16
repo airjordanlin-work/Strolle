@@ -30,6 +30,7 @@ void main() {
   testWidgets('renders daily goal presets with the default selected',
       (tester) async {
     await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
     for (final preset in kDailyGoalPresets) {
       expect(find.text('$preset / day'), findsOneWidget);
     }
@@ -41,6 +42,7 @@ void main() {
       (tester) async {
     int? reported;
     await tester.pumpWidget(harness(onDailyGoalChanged: (v) => reported = v));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('dailyGoal20')));
     expect(reported, 20);
@@ -49,12 +51,14 @@ void main() {
   testWidgets('shows "days to go" once a test date is set', (tester) async {
     final date = DateTime.now().add(const Duration(days: 30));
     await tester.pumpWidget(harness(testDate: date));
+    await tester.pumpAndSettle();
     expect(find.textContaining('days to go'), findsOneWidget);
   });
 
   testWidgets('Start studying fires onFinish', (tester) async {
     var finished = false;
     await tester.pumpWidget(harness(onFinish: () => finished = true));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(FilledButton, 'Start studying'));
     expect(finished, isTrue);
