@@ -1,5 +1,5 @@
-// Integration tests for register-entry and grade-attempt against a local
-// Supabase stack. Needs, from backend/:
+// Integration tests for register-entry, start-attempt and grade-attempt
+// against a local Supabase stack. Needs, from backend/:
 //
 //   supabase start
 //   supabase functions serve        (in another terminal)
@@ -13,7 +13,7 @@
 // every machine, never valid against a real project).
 import { assert, assertEquals } from "jsr:@std/assert";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
-import questionData from "../supabase/functions/grade-attempt/questions.json" with {
+import questionData from "../supabase/functions/_shared/questions.json" with {
   type: "json",
 };
 
@@ -91,17 +91,43 @@ function secondsUntil(iso: unknown): number {
   return Math.round((new Date(iso as string).getTime() - Date.now()) / 1000);
 }
 
+async function start(user: TestUser, q: Q): Promise<string> {
+  const { status, json } = await call("start-attempt", user.token, {
+    question_id: q.id,
+  });
+  assertEquals(status, 200);
+  return json.attempt_id as string;
+}
+
+// Serves q and answers it. Unless `fast` is set, served_at is moved back
+// five seconds so the answer clears the guess threshold without the test
+// having to sleep.
+async function answer(
+  user: TestUser,
+  q: Q,
+  choice: number,
+  opts: { platform?: string; fast?: boolean } = {},
+) {
+  const attemptId = await start(user, q);
+  if (!opts.fast) {
+    await admin.from("gate_serves")
+      .update({ served_at: new Date(Date.now() - 5000).toISOString() })
+      .eq("id", attemptId);
+  }
+  return call("grade-attempt", user.token, {
+    attempt_id: attemptId,
+    choice_index: choice,
+    platform: opts.platform,
+  });
+}
+
 Deno.test({
   name: "a correct answer writes the review item and a 5-minute pass",
   ignore,
   async fn() {
     const user = await newUser();
     const q = gate[0];
-    const { status, json } = await call("grade-attempt", user.token, {
-      question_id: q.id,
-      choice_index: q.correct_index,
-      elapsed_ms: 4000,
-    });
+    const { status, json } = await answer(user, q, q.correct_index);
     assertEquals(status, 200);
     assertEquals(json.correct, true);
     assertEquals(json.questions_remaining, 0);
@@ -121,6 +147,10 @@ Deno.test({
       new Date(pass!.pass_expires_at).getTime(),
       new Date(json.pass_expires_at as string).getTime(),
     );
+
+    const { data: serve } = await admin.from("gate_serves")
+      .select("outcome").eq("user_id", user.id).single();
+    assertEquals(serve!.outcome, "correct");
   },
 });
 
@@ -129,10 +159,7 @@ Deno.test({
   ignore,
   async fn() {
     const q = gate[1];
-    const android = await newUser();
-    const a = await call("grade-attempt", android.token, {
-      question_id: q.id,
-      choice_index: wrongChoice(q),
+    const a = await answer(await newUser(), q, wrongChoice(q), {
       platform: "android",
     });
     assertEquals(a.json.correct, false);
@@ -140,10 +167,7 @@ Deno.test({
     assert(aLeft > 80 && aLeft <= 90, `android pass ends in ${aLeft}s`);
     assertEquals((a.json.review_item as { streak: number }).streak, 0);
 
-    const ios = await newUser();
-    const i = await call("grade-attempt", ios.token, {
-      question_id: q.id,
-      choice_index: wrongChoice(q),
+    const i = await answer(await newUser(), q, wrongChoice(q), {
       platform: "ios",
     });
     const iLeft = secondsUntil(i.json.pass_expires_at);
@@ -152,23 +176,90 @@ Deno.test({
 });
 
 Deno.test({
-  name: "a too-fast answer is discarded and writes nothing",
+  name: "an answer under 2 s by the server's clock is discarded",
   ignore,
   async fn() {
     const user = await newUser();
     const q = gate[2];
-    const { status, json } = await call("grade-attempt", user.token, {
-      question_id: q.id,
-      choice_index: q.correct_index,
-      elapsed_ms: 500,
+    const { status, json } = await answer(user, q, q.correct_index, {
+      fast: true,
     });
     assertEquals(status, 200);
-    assertEquals(json, { scored: false, too_fast: true });
+    assertEquals(json.scored, false);
+    assertEquals(json.too_fast, true);
 
     const { count } = await admin.from("review_items")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id);
     assertEquals(count, 0);
+    const { data: pass } = await admin.from("pass_state")
+      .select("*").eq("user_id", user.id);
+    assertEquals(pass, []);
+  },
+});
+
+Deno.test({
+  name: "waiting past 2 s for real gets the answer scored",
+  ignore,
+  async fn() {
+    const user = await newUser();
+    const q = gate[6];
+    const attemptId = await start(user, q);
+    await new Promise((r) => setTimeout(r, 2100));
+    const { json } = await call("grade-attempt", user.token, {
+      attempt_id: attemptId,
+      choice_index: q.correct_index,
+    });
+    assertEquals(json.scored, true);
+    assert((json.elapsed_ms as number) >= 2000, `elapsed ${json.elapsed_ms}`);
+  },
+});
+
+Deno.test({
+  name: "an attempt can only be graded once, and only by its owner",
+  ignore,
+  async fn() {
+    const user = await newUser();
+    const q = gate[7];
+    const attemptId = await start(user, q);
+    await admin.from("gate_serves")
+      .update({ served_at: new Date(Date.now() - 5000).toISOString() })
+      .eq("id", attemptId);
+
+    const other = await newUser();
+    const stolen = await call("grade-attempt", other.token, {
+      attempt_id: attemptId,
+      choice_index: q.correct_index,
+    });
+    assertEquals(stolen.status, 404);
+
+    const body = { attempt_id: attemptId, choice_index: q.correct_index };
+    const [a, b] = await Promise.all([
+      call("grade-attempt", user.token, body),
+      call("grade-attempt", user.token, body),
+    ]);
+    assertEquals([a.status, b.status].sort(), [200, 409]);
+  },
+});
+
+Deno.test({
+  name: "a free entry sets a 5-minute pass on the server",
+  ignore,
+  async fn() {
+    const user = await newUser();
+    const { json } = await call("register-entry", user.token, {
+      platform: "android",
+    });
+    assertEquals(json.questions_owed, 0);
+    const left = secondsUntil(json.pass_expires_at);
+    assert(left > 290 && left <= 300, `pass ends in ${left}s`);
+
+    const { data: pass } = await admin.from("pass_state")
+      .select("pass_expires_at").eq("user_id", user.id).single();
+    assertEquals(
+      new Date(pass!.pass_expires_at).getTime(),
+      new Date(json.pass_expires_at as string).getTime(),
+    );
   },
 });
 
@@ -177,24 +268,25 @@ Deno.test({
   ignore,
   async fn() {
     const user = await newUser();
-    const owed = [];
+    const entries = [];
     for (let i = 0; i < 3; i++) {
-      const { json } = await call("register-entry", user.token);
-      owed.push(json.questions_owed);
+      entries.push((await call("register-entry", user.token)).json);
     }
-    assertEquals(owed, [0, 1, 2]);
+    assertEquals(entries.map((e) => e.questions_owed), [0, 1, 2]);
+    assert(entries[0].pass_expires_at !== null);
+    assertEquals(entries[1].pass_expires_at, null);
 
-    const first = await call("grade-attempt", user.token, {
-      question_id: gate[3].id,
-      choice_index: gate[3].correct_index,
-    });
+    const { data: before } = await admin.from("pass_state")
+      .select("pass_expires_at").eq("user_id", user.id).single();
+
+    const first = await answer(user, gate[3], gate[3].correct_index);
     assertEquals(first.json.questions_remaining, 1);
     assertEquals(first.json.pass_expires_at, null);
+    const { data: mid } = await admin.from("pass_state")
+      .select("pass_expires_at").eq("user_id", user.id).single();
+    assertEquals(mid!.pass_expires_at, before!.pass_expires_at);
 
-    const second = await call("grade-attempt", user.token, {
-      question_id: gate[4].id,
-      choice_index: gate[4].correct_index,
-    });
+    const second = await answer(user, gate[4], gate[4].correct_index);
     assertEquals(second.json.questions_remaining, 0);
     assert(second.json.pass_expires_at !== null);
   },
@@ -208,11 +300,10 @@ Deno.test({
     const q = gate[5];
     const intervals = [];
     for (let i = 0; i < 3; i++) {
-      const { json } = await call("grade-attempt", user.token, {
-        question_id: q.id,
-        choice_index: q.correct_index,
-      });
-      intervals.push((json.review_item as { interval_minutes: number }).interval_minutes);
+      const { json } = await answer(user, q, q.correct_index);
+      intervals.push(
+        (json.review_item as { interval_minutes: number }).interval_minutes,
+      );
     }
     assertEquals(intervals, [25, 63, 158]);
   },
@@ -225,23 +316,33 @@ Deno.test({
     const user = await newUser();
     const q = gate[0];
     assertEquals(
-      (await call("grade-attempt", null, { question_id: q.id, choice_index: 0 })).status,
+      (await call("start-attempt", null, { question_id: q.id })).status,
       401,
     );
     assertEquals(
-      (await call("grade-attempt", user.token, { question_id: "nope", choice_index: 0 }))
-        .status,
+      (await call("start-attempt", user.token, { question_id: "nope" })).status,
       404,
     );
     assertEquals(
-      (await call("grade-attempt", user.token, {
-        question_id: session.id,
-        choice_index: 0,
-      })).status,
+      (await call("start-attempt", user.token, { question_id: session.id }))
+        .status,
       400,
     );
     assertEquals(
-      (await call("grade-attempt", user.token, { question_id: q.id, choice_index: 9 }))
+      (await call("grade-attempt", user.token, {
+        attempt_id: crypto.randomUUID(),
+        choice_index: 0,
+      })).status,
+      404,
+    );
+    assertEquals(
+      (await call("grade-attempt", user.token, { question_id: q.id, choice_index: 0 }))
+        .status,
+      400,
+    );
+    const attemptId = await start(user, q);
+    assertEquals(
+      (await call("grade-attempt", user.token, { attempt_id: attemptId, choice_index: 9 }))
         .status,
       400,
     );
@@ -249,28 +350,36 @@ Deno.test({
 });
 
 Deno.test({
-  name: "RLS: a user can read their pass state but not change it",
+  name: "RLS: a user can read their own state but not change it",
   ignore,
   async fn() {
     const user = await newUser();
-    await call("grade-attempt", user.token, {
-      question_id: gate[0].id,
-      choice_index: gate[0].correct_index,
-    });
+    await answer(user, gate[0], gate[0].correct_index);
 
     const { data: own } = await user.client.from("pass_state")
       .select("pass_expires_at").eq("user_id", user.id);
     assertEquals(own!.length, 1);
+    const { data: serves } = await user.client.from("gate_serves")
+      .select("id").eq("user_id", user.id);
+    assertEquals(serves!.length, 1);
 
     const farFuture = "2099-01-01T00:00:00Z";
     await user.client.from("pass_state")
       .update({ pass_expires_at: farFuture }).eq("user_id", user.id);
     await user.client.from("pass_state")
       .upsert({ user_id: user.id, pass_expires_at: farFuture });
+    await user.client.from("gate_serves").insert({
+      user_id: user.id,
+      question_id: gate[1].id,
+      served_at: "2000-01-01T00:00:00Z",
+    });
 
     const { data: after } = await admin.from("pass_state")
       .select("pass_expires_at").eq("user_id", user.id).single();
     assert(new Date(after!.pass_expires_at).getFullYear() < 2099);
+    const { count } = await admin.from("gate_serves")
+      .select("*", { count: "exact", head: true }).eq("user_id", user.id);
+    assertEquals(count, 1);
 
     const other = await newUser();
     const { data: theirs } = await other.client.from("pass_state")

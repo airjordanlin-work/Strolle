@@ -10,7 +10,7 @@
 // Creates (or reuses) a test auth user, signs in to mint a real access
 // token, and prints a real gate question_id with its answer key from the
 // bundled question set: everything needed to construct a curl call
-// against grade-attempt. See backend/MANUAL_TEST.md.
+// against grade-attempt. See TESTING.md.
 //
 // Defaults below are the Supabase CLI's well-known local dev keys
 // (same on every machine, never valid against a real project). Override
@@ -60,7 +60,7 @@ if (signInError || !signedIn.session) {
 const accessToken = signedIn.session.access_token;
 
 const questionsPath = new URL(
-  "../supabase/functions/grade-attempt/questions.json",
+  "../supabase/functions/_shared/questions.json",
   import.meta.url,
 );
 const questions: Array<
@@ -74,10 +74,4 @@ console.log(`access_token:  ${accessToken}`);
 console.log(`question_id:   ${sampleQuestionId}`);
 console.log(`correct_index: ${sample.correct_index}`);
 console.log();
-console.log("Example call:");
-console.log(
-  `curl -i "${SUPABASE_URL}/functions/v1/grade-attempt" \\
-  -H "Authorization: Bearer ${accessToken}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"question_id": "${sampleQuestionId}", "choice_index": ${sample.correct_index}, "elapsed_ms": 4000}'`,
-);
+console.log("Next: export TOKEN=<access_token> and follow TESTING.md step 5.");

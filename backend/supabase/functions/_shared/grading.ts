@@ -1,5 +1,5 @@
-// Pure grading rules for grade-attempt. No I/O, so they can be unit
-// tested directly. Ported from app/lib/services/pass_service.dart and
+// Pure grading rules for grade-attempt and register-entry. No I/O, so
+// they can be unit tested directly. Ported from app/lib/services/pass_service.dart and
 // app/lib/data/review_queue.dart; keep the three in sync by hand.
 
 export type Platform = "ios" | "android";
@@ -59,10 +59,16 @@ export function passLengthSeconds(correct: boolean, platform: Platform): number 
   return platform === "ios" ? Math.max(base, IOS_PASS_FLOOR_SECONDS) : base;
 }
 
+// A free entry (nothing owed) gets the full pass straight away.
+export function freeEntryPassSeconds(platform: Platform): number {
+  return passLengthSeconds(true, platform);
+}
+
 // Answers faster than the guess threshold are discarded: no pass, no
-// review update, the client serves another question.
-export function isTooFast(elapsedMs: number | undefined): boolean {
-  return elapsedMs !== undefined && elapsedMs < GUESS_THRESHOLD_MS;
+// review update, the client serves another question. elapsedMs is
+// measured on the server, from start-attempt to grade-attempt.
+export function isTooFast(elapsedMs: number): boolean {
+  return elapsedMs < GUESS_THRESHOLD_MS;
 }
 
 // How many questions are still owed after this scored answer. A user with
@@ -72,11 +78,17 @@ export function remainingAfterAnswer(questionsOwed: number): number {
   return Math.max(questionsOwed, 1) - 1;
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function parsePlatform(value: unknown): Platform | null {
+  const platform = value ?? "ios";
+  return platform === "ios" || platform === "android" ? platform : null;
+}
+
 export interface GradeRequest {
-  question_id: string;
+  attempt_id: string;
   choice_index: number;
   platform: Platform;
-  elapsed_ms?: number;
 }
 
 // Validates the request body. Returns an error message, or the parsed
@@ -88,27 +100,23 @@ export function parseGradeRequest(
     return { error: "body must be a JSON object" };
   }
   const b = body as Record<string, unknown>;
-  if (typeof b.question_id !== "string" || !Number.isInteger(b.choice_index)) {
+  if (
+    typeof b.attempt_id !== "string" || !UUID.test(b.attempt_id) ||
+    !Number.isInteger(b.choice_index)
+  ) {
     return {
-      error: "question_id (string) and choice_index (integer) required",
+      error: "attempt_id (uuid from start-attempt) and choice_index (integer) required",
     };
   }
-  const platform = b.platform ?? "ios";
-  if (platform !== "ios" && platform !== "android") {
+  const platform = parsePlatform(b.platform);
+  if (!platform) {
     return { error: "platform must be 'ios' or 'android'" };
-  }
-  if (
-    b.elapsed_ms !== undefined &&
-    (typeof b.elapsed_ms !== "number" || b.elapsed_ms < 0)
-  ) {
-    return { error: "elapsed_ms must be a non-negative number" };
   }
   return {
     request: {
-      question_id: b.question_id,
+      attempt_id: b.attempt_id,
       choice_index: b.choice_index as number,
       platform,
-      elapsed_ms: b.elapsed_ms as number | undefined,
     },
   };
 }

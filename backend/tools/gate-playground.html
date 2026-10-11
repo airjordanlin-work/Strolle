@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gate Playground</title>
+<!--
+  Local-only test page for the gate backend. It drives register-entry,
+  start-attempt and grade-attempt against `supabase start` +
+  `supabase functions serve`, the same calls the app will make, and shows
+  the server's pass state. See TESTING.md.
+
+  Serve it from backend/:  python3 -m http.server 8787
+  then open http://localhost:8787/tools/gate-playground.html
+-->
+<style>
+  :root {
+    --bg: #f7f5f0; --card: #fff; --ink: #1d1b16; --muted: #6b665b;
+    --line: #e2ddd2; --accent: #2f5d50; --good: #2e7d4f; --bad: #b3402e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171614; --card: #22201d; --ink: #f1ede4; --muted: #a39d90;
+      --line: #36332e; --accent: #7fb8a4; --good: #6cc08f; --bad: #e07a66;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 720px) { .grid { grid-template-columns: 3fr 2fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px;
+  }
+  .card h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin: 0 0 12px;
+  }
+  button {
+    font: inherit; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); padding: 8px 12px; cursor: pointer;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  button:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .choice { display: block; width: 100%; text-align: left; margin-top: 8px; }
+  .choice.correct { border-color: var(--good); }
+  .choice.wrong { border-color: var(--bad); }
+  .stem { font-size: 17px; margin: 4px 0 8px; }
+  .muted { color: var(--muted); }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 99px;
+    border: 1px solid var(--line); font-size: 12px; color: var(--muted);
+  }
+  .countdown { font-size: 32px; font-variant-numeric: tabular-nums; margin: 4px 0; }
+  .ok { color: var(--good); } .err { color: var(--bad); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
+  dt { color: var(--muted); } dd { margin: 0; font-variant-numeric: tabular-nums; }
+  pre {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 8px; font-size: 12px; overflow-x: auto; max-height: 260px; margin: 0;
+  }
+  select { font: inherit; padding: 6px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Gate playground</h1>
+  <p class="sub">Drives the local Edge Functions the way the app will. Local Supabase only.</p>
+
+  <div class="grid">
+    <section class="card" aria-live="polite">
+      <h2>Gate</h2>
+      <div class="row">
+        <button id="signin" class="primary">Sign in as a new test user</button>
+        <label class="muted">Platform
+          <select id="platform"><option>ios</option><option>android</option></select>
+        </label>
+      </div>
+      <p id="who" class="muted"></p>
+      <div class="row">
+        <button id="open" disabled>Open a gated app</button>
+        <span id="owed" class="pill" hidden></span>
+      </div>
+      <div id="question" hidden>
+        <p class="muted" style="margin:16px 0 0"><span id="qmeta"></span></p>
+        <p class="stem" id="stem"></p>
+        <div id="choices"></div>
+        <p id="feedback"></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Server pass state</h2>
+      <p class="muted" style="margin:0">Pass ends in</p>
+      <p class="countdown" id="countdown">–</p>
+      <dl id="state"></dl>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Last response</h2>
+    <pre id="log">Nothing yet.</pre>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // Supabase CLI's well-known local dev key, never valid on a real project.
+  const URL_ = "http://127.0.0.1:54321";
+  const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
+  const sb = supabase.createClient(URL_, ANON, { auth: { persistSession: false } });
+
+  const $ = (id) => document.getElementById(id);
+  let gateQuestions = [];
+  let session = null;
+  let owed = 0;
+  let passExpiresAt = null;
+
+  function log(label, body) {
+    $("log").textContent = label + "\n" + JSON.stringify(body, null, 2);
+  }
+
+  async function fn(name, body) {
+    const res = await fetch(`${URL_}/functions/v1/${name}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(body ?? {}),
+    });
+    const json = await res.json();
+    log(`${name} → ${res.status}`, json);
+    return { status: res.status, json };
+  }
+
+  async function loadQuestions() {
+    // The bundled bank, the same file the functions grade against.
+    // (Unreviewed items aren't readable from the questions table via RLS.)
+    const res = await fetch("../supabase/functions/_shared/questions.json").catch(() => null);
+    if (res && res.ok) {
+      gateQuestions = (await res.json()).filter((q) => q.tier === "gate");
+    }
+  }
+
+  async function refreshState() {
+    if (!session) return;
+    const { data } = await sb.from("pass_state").select("*").maybeSingle();
+    const rows = data ?? {};
+    passExpiresAt = rows.pass_expires_at ? new Date(rows.pass_expires_at) : null;
+    $("state").innerHTML = [
+      ["entries this hour", rows.entries_this_hour ?? 0],
+      ["questions owed", rows.questions_owed ?? 0],
+      ["pass expires", passExpiresAt ? passExpiresAt.toLocaleTimeString() : "none"],
+      ["updated", rows.updated_at ? new Date(rows.updated_at).toLocaleTimeString() : "–"],
+    ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  }
+
+  function tick() {
+    if (!passExpiresAt) { $("countdown").textContent = "–"; return; }
+    const s = Math.max(0, Math.round((passExpiresAt - Date.now()) / 1000));
+    $("countdown").textContent = s === 0 ? "expired"
+      : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  }
+  setInterval(tick, 1000);
+
+  $("signin").onclick = async () => {
+    const email = `play-${crypto.randomUUID().slice(0, 8)}@local.test`;
+    const { data, error } = await sb.auth.signUp({
+      email, password: crypto.randomUUID(),
+    });
+    if (error) { log("sign up failed", error); return; }
+    session = data.session;
+    $("who").textContent = `Signed in as ${email}`;
+    $("open").disabled = false;
+    await refreshState();
+  };
+
+  $("open").onclick = async () => {
+    const { json } = await fn("register-entry", { platform: $("platform").value });
+    owed = json.questions_owed;
+    $("owed").hidden = false;
+    $("owed").textContent = owed === 0 ? "Free entry: pass granted" : `${owed} question${owed > 1 ? "s" : ""} owed`;
+    await refreshState(); tick();
+    if (owed > 0) serve(); else $("question").hidden = true;
+  };
+
+  async function serve() {
+    const q = gateQuestions[Math.floor(Math.random() * gateQuestions.length)];
+    const { json } = await fn("start-attempt", { question_id: q.id });
+    $("question").hidden = false;
+    $("qmeta").textContent = `${q.id} · ${q.section} · ${q.four_d}`;
+    $("stem").textContent = q.stem;
+    $("feedback").textContent = "";
+    $("choices").innerHTML = "";
+    q.choices.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "choice"; b.textContent = c;
+      b.onclick = () => answer(json.attempt_id, i, b);
+      $("choices").appendChild(b);
+    });
+  }
+
+  async function answer(attemptId, choice, button) {
+    document.querySelectorAll(".choice").forEach((b) => (b.disabled = true));
+    const { json } = await fn("grade-attempt", {
+      attempt_id: attemptId, choice_index: choice, platform: $("platform").value,
+    });
+    await refreshState(); tick();
+    if (json.too_fast) {
+      $("feedback").innerHTML = `<span class="err">Too fast (${json.elapsed_ms} ms). Not counted; here's another.</span>`;
+      setTimeout(serve, 1200);
+      return;
+    }
+    button.classList.add(json.correct ? "correct" : "wrong");
+    const rest = json.questions_remaining;
+    $("feedback").innerHTML = json.correct
+      ? `<span class="ok">Correct.</span>` : `<span class="err">Not quite. Entry still granted.</span>`;
+    if (rest > 0) {
+      $("owed").textContent = `${rest} question${rest > 1 ? "s" : ""} owed`;
+      setTimeout(serve, 1200);
+    } else {
+      $("owed").textContent = "Pass granted";
+    }
+  }
+
+  loadQuestions();
+</script>
+</body>
+</html>

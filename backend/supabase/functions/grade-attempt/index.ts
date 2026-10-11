@@ -1,74 +1,56 @@
-// Scores a gate answer server-side and updates the two things only this
-// function is allowed to write: pass_expires_at (plus the owed-question
-// countdown) in pass_state, and review_items. The client sends
-// question_id + choice_index; correctness is never taken from the client,
-// it's decided against the bundled question set below.
+// Scores a gate answer server-side and updates the things only the
+// grading path may write: pass_expires_at (plus the owed-question
+// countdown) in pass_state, review_items, and the gate_serves row.
 //
-// questions.json here is a generated copy of
+// The client sends the attempt_id it got from start-attempt plus its
+// choice_index. Correctness is decided against the bundled question set,
+// and answer time is measured between the two server timestamps, so
+// neither is taken from the client.
+//
+// _shared/questions.json is a generated copy of
 // content/question_bank/questions.json. Don't edit it by hand; run
 // `python3 content/question_bank/sync.py` after changing the bank.
 //
 // The rules themselves (interval math, pass length, guess threshold, owed
-// countdown) live in grading.ts so they can be unit tested.
+// countdown) live in _shared/grading.ts so they can be unit tested.
 //
-// Known gaps:
-// - elapsed_ms comes from the client. Timing it server-side needs
-//   /start-attempt, which doesn't exist yet.
-// - The pass_state read and write are two calls, so two answers racing
-//   for the same user can double-count. The design doc's single
-//   gate_answer Postgres function fixes this.
-import { createClient } from "npm:@supabase/supabase-js@2";
-import questionData from "./questions.json" with { type: "json" };
+// Known gap: the pass_state read and write are two calls, so two answers
+// racing for the same user can double-count. The design doc's single
+// gate_answer Postgres function fixes this.
+import questionData from "../_shared/questions.json" with { type: "json" };
 import {
   isTooFast,
   nextReview,
   parseGradeRequest,
   passLengthSeconds,
   remainingAfterAnswer,
-} from "./grading.ts";
+} from "../_shared/grading.ts";
+import {
+  jsonResponse,
+  preflight,
+  readJson,
+  requireUser,
+  serviceClient,
+} from "../_shared/http.ts";
 
 type StoredQuestion = {
   id: string;
-  tier: "gate" | "session";
   choices: string[];
   correct_index: number;
 };
 const questions = questionData as StoredQuestion[];
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
-}
-
 Deno.serve(async (req) => {
-  if (req.method !== "POST") {
-    return jsonResponse({ error: "method not allowed" }, 405);
-  }
+  const early = preflight(req);
+  if (early) return early;
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return jsonResponse({ error: "missing Authorization header" }, 401);
-  }
-
-  const authedClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: userData, error: userError } = await authedClient.auth
-    .getUser();
-  if (userError || !userData.user) {
-    return jsonResponse({ error: "invalid session" }, 401);
-  }
-  const userId = userData.user.id;
+  const auth = await requireUser(req);
+  if ("response" in auth) return auth.response;
+  const userId = auth.userId;
 
   let body: unknown;
   try {
-    body = await req.json();
+    body = await readJson(req);
   } catch {
     return jsonResponse({ error: "invalid JSON body" }, 400);
   }
@@ -76,27 +58,59 @@ Deno.serve(async (req) => {
   if ("error" in parsed) {
     return jsonResponse({ error: parsed.error }, 400);
   }
-  const { question_id, choice_index, platform, elapsed_ms } = parsed.request;
+  const { attempt_id, choice_index, platform } = parsed.request;
+  const db = serviceClient();
 
-  const question = questions.find((q) => q.id === question_id);
-  if (!question) {
-    return jsonResponse({ error: "unknown question_id" }, 404);
+  const { data: serve, error: serveError } = await db
+    .from("gate_serves")
+    .select("question_id, graded_at")
+    .eq("id", attempt_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (serveError) {
+    return jsonResponse({ error: "failed to read attempt" }, 500);
   }
-  if (question.tier !== "gate") {
-    return jsonResponse({ error: "not a gate question" }, 400);
+  if (!serve) {
+    return jsonResponse({ error: "unknown attempt_id" }, 404);
+  }
+  if (serve.graded_at) {
+    return jsonResponse({ error: "attempt already graded" }, 409);
+  }
+
+  const question = questions.find((q) => q.id === serve.question_id);
+  if (!question) {
+    return jsonResponse({ error: "question no longer in the bank" }, 410);
   }
   if (choice_index < 0 || choice_index >= question.choices.length) {
     return jsonResponse({ error: "choice_index out of range" }, 400);
   }
 
-  // Under the guess threshold: not a rep. Nothing is written.
-  if (isTooFast(elapsed_ms)) {
-    return jsonResponse({ scored: false, too_fast: true });
+  // Claim the attempt. The graded_at check makes this the single winner
+  // if the same attempt is submitted twice at once.
+  const { data: claimed, error: claimError } = await db
+    .from("gate_serves")
+    .update({ graded_at: new Date().toISOString() })
+    .eq("id", attempt_id)
+    .is("graded_at", null)
+    .select("served_at, graded_at")
+    .maybeSingle();
+  if (claimError) {
+    return jsonResponse({ error: "failed to grade attempt" }, 500);
+  }
+  if (!claimed) {
+    return jsonResponse({ error: "attempt already graded" }, 409);
   }
 
+  const now = new Date(claimed.graded_at);
+  const elapsedMs = now.getTime() - new Date(claimed.served_at).getTime();
   const correct = choice_index === question.correct_index;
-  const now = new Date();
-  const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+  // Under the guess threshold: not a rep. Only the attempt is recorded.
+  if (isTooFast(elapsedMs)) {
+    await db.from("gate_serves").update({ outcome: "too_fast" })
+      .eq("id", attempt_id);
+    return jsonResponse({ scored: false, too_fast: true, elapsed_ms: elapsedMs });
+  }
 
   const [{ data: passRow, error: passReadError }, {
     data: reviewRow,
@@ -109,7 +123,7 @@ Deno.serve(async (req) => {
     db.from("review_items")
       .select("interval_minutes, streak")
       .eq("user_id", userId)
-      .eq("question_id", question_id)
+      .eq("question_id", question.id)
       .maybeSingle(),
   ]);
   if (passReadError || reviewReadError) {
@@ -128,7 +142,7 @@ Deno.serve(async (req) => {
     .from("review_items")
     .upsert({
       user_id: userId,
-      question_id,
+      question_id: question.id,
       due_at: review.dueAt.toISOString(),
       interval_minutes: review.intervalMinutes,
       streak: review.streak,
@@ -149,20 +163,24 @@ Deno.serve(async (req) => {
   };
   if (passExpiresAt) passUpdate.pass_expires_at = passExpiresAt.toISOString();
 
-  const { error: passError } = await db
-    .from("pass_state")
-    .upsert(passUpdate, { onConflict: "user_id" });
-  if (passError) {
+  const [{ error: passError }, { error: outcomeError }] = await Promise.all([
+    db.from("pass_state").upsert(passUpdate, { onConflict: "user_id" }),
+    db.from("gate_serves")
+      .update({ outcome: correct ? "correct" : "incorrect" })
+      .eq("id", attempt_id),
+  ]);
+  if (passError || outcomeError) {
     return jsonResponse({ error: "failed to update pass state" }, 500);
   }
 
   return jsonResponse({
     scored: true,
     correct,
+    elapsed_ms: elapsedMs,
     questions_remaining: remaining,
     pass_expires_at: passExpiresAt?.toISOString() ?? null,
     review_item: {
-      question_id,
+      question_id: question.id,
       due_at: review.dueAt.toISOString(),
       interval_minutes: review.intervalMinutes,
       streak: review.streak,

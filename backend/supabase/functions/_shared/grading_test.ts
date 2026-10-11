@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "jsr:@std/assert";
 import {
   CAP_MINUTES,
+  freeEntryPassSeconds,
   isTooFast,
   nextReview,
   parseGradeRequest,
@@ -47,11 +48,15 @@ Deno.test("ios: a wrong answer still gets the 5-minute floor", () => {
   assertEquals(passLengthSeconds(false, "ios"), 300);
 });
 
-Deno.test("answers under 2 seconds are too fast; missing timing is scored", () => {
+Deno.test("answers under 2 seconds are too fast", () => {
   assert(isTooFast(0));
   assert(isTooFast(1999));
   assert(!isTooFast(2000));
-  assert(!isTooFast(undefined));
+});
+
+Deno.test("a free entry gets the full 5-minute pass on both platforms", () => {
+  assertEquals(freeEntryPassSeconds("ios"), 300);
+  assertEquals(freeEntryPassSeconds("android"), 300);
 });
 
 Deno.test("owed questions count down, and nothing owed still means one", () => {
@@ -61,21 +66,17 @@ Deno.test("owed questions count down, and nothing owed still means one", () => {
 });
 
 Deno.test("request parsing defaults platform to ios and rejects bad input", () => {
-  const ok = parseGradeRequest({ question_id: "m-001", choice_index: 2 });
+  const id = "0b6f2a52-3c1e-4d7a-9a51-2f8e6c4b7d10";
+  const ok = parseGradeRequest({ attempt_id: id, choice_index: 2 });
   assert("request" in ok);
   assertEquals(ok.request.platform, "ios");
 
   assert("error" in parseGradeRequest(null));
-  assert("error" in parseGradeRequest({ question_id: "m-001" }));
-  assert("error" in parseGradeRequest({ question_id: 1, choice_index: 0 }));
-  assert("error" in parseGradeRequest({ question_id: "m-001", choice_index: 1.5 }));
+  assert("error" in parseGradeRequest({ attempt_id: id }));
+  assert("error" in parseGradeRequest({ attempt_id: "m-001", choice_index: 0 }));
+  assert("error" in parseGradeRequest({ attempt_id: id, choice_index: 1.5 }));
   assert(
-    "error" in
-      parseGradeRequest({ question_id: "m-001", choice_index: 0, platform: "web" }),
-  );
-  assert(
-    "error" in
-      parseGradeRequest({ question_id: "m-001", choice_index: 0, elapsed_ms: -1 }),
+    "error" in parseGradeRequest({ attempt_id: id, choice_index: 0, platform: "web" }),
   );
 });
 

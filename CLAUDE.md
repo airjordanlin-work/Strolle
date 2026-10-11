@@ -29,10 +29,12 @@ Backend: nothing exists yet. This is M2. Your job.
 - **Escalating cost, not flat.** First entry in a rolling hour is free.
   Then 1, 2, 3 questions, plateauing at 3.
 - **Server-authoritative pass state.** Clients read `pass_state`, never
-  write it directly. Only a grading Edge Function can set
-  `pass_expires_at`. This is the actual threat model: state must survive
-  app reinstall/reboot, which means client-only state is not acceptable
-  even for M1/M2 testing.
+  write it directly. Only Edge Functions set `pass_expires_at`:
+  `grade-attempt` after the owed questions are answered, and
+  `register-entry` for a free entry (nothing owed, so nothing to grade).
+  This is the actual threat model: state must survive app
+  reinstall/reboot, which means client-only state is not acceptable even
+  for M1/M2 testing.
 - **No day-long disable.** The "turn it off" path is a 10-question quiz
   at 70%+ granting a 2-hour extended pass, once per day. Never a
   full-day free pass — see docs/decisions/0001 if you want the reasoning.
@@ -54,7 +56,8 @@ Backend: nothing exists yet. This is M2. Your job.
 
 ## Scope: M2 only, right now
 Build only what's needed for: Supabase schema, server-side grading
-(`/start-attempt`, `/grade-attempt`, `/pass-status` Edge Functions),
+(`/register-entry`, `/start-attempt`, `/grade-attempt`, `/pass-status` Edge
+Functions),
 pass state persistence, retention/cohort instrumentation. Do not start
 on iOS shield code, the content generation pipeline, or the social
 features (accountability partner) — those are separate milestones and

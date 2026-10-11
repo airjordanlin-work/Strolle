@@ -2,53 +2,50 @@
 // pass_state's rolling-hour entry window and returns how many questions
 // are owed for this entry. This is the only function allowed to write
 // pass_state.entries_this_hour / hour_window_started. It also sets
-// questions_owed, which grade-attempt counts down; grade-attempt owns
-// pass_expires_at and review_items, and this function never touches
-// either.
+// questions_owed, which grade-attempt counts down.
+//
+// A free entry (nothing owed) gets its pass here, since no question will
+// be graded for it. This is the one place besides grade-attempt that sets
+// pass_expires_at.
 //
 // The schema stores one window-start timestamp plus a count, not a log
 // of individual entry times, so this is a tumbling window (it resets
 // once a full hour has elapsed since it opened) rather than a true
 // sliding window. That's a property of the schema, not a shortcut taken
 // here.
-import { createClient } from "npm:@supabase/supabase-js@2";
 import { costForEntry } from "./cost.ts";
+import { freeEntryPassSeconds, parsePlatform } from "../_shared/grading.ts";
+import {
+  jsonResponse,
+  preflight,
+  readJson,
+  requireUser,
+  serviceClient,
+} from "../_shared/http.ts";
 
 const WINDOW_MS = 60 * 60 * 1000;
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
-}
-
 Deno.serve(async (req) => {
-  if (req.method !== "POST") {
-    return jsonResponse({ error: "method not allowed" }, 405);
-  }
+  const early = preflight(req);
+  if (early) return early;
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return jsonResponse({ error: "missing Authorization header" }, 401);
-  }
+  const auth = await requireUser(req);
+  if ("response" in auth) return auth.response;
+  const userId = auth.userId;
 
-  const authedClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: userData, error: userError } = await authedClient.auth
-    .getUser();
-  if (userError || !userData.user) {
-    return jsonResponse({ error: "invalid session" }, 401);
+  let body: Record<string, unknown>;
+  try {
+    body = (await readJson(req)) as Record<string, unknown>;
+  } catch {
+    return jsonResponse({ error: "invalid JSON body" }, 400);
   }
-  const userId = userData.user.id;
+  const platform = parsePlatform(body?.platform);
+  if (!platform) {
+    return jsonResponse({ error: "platform must be 'ios' or 'android'" }, 400);
+  }
 
   const now = new Date();
-  const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+  const db = serviceClient();
 
   const { data: existing, error: fetchError } = await db
     .from("pass_state")
@@ -71,16 +68,22 @@ Deno.serve(async (req) => {
   const windowStartedAt = windowExpired ? now : windowStarted;
 
   const questionsOwed = costForEntry(entriesThisHour);
+  const passExpiresAt = questionsOwed === 0
+    ? new Date(now.getTime() + freeEntryPassSeconds(platform) * 1000)
+    : null;
+
+  const update: Record<string, unknown> = {
+    user_id: userId,
+    entries_this_hour: entriesThisHour,
+    hour_window_started: windowStartedAt.toISOString(),
+    questions_owed: questionsOwed,
+    updated_at: now.toISOString(),
+  };
+  if (passExpiresAt) update.pass_expires_at = passExpiresAt.toISOString();
 
   const { error: writeError } = await db
     .from("pass_state")
-    .upsert({
-      user_id: userId,
-      entries_this_hour: entriesThisHour,
-      hour_window_started: windowStartedAt.toISOString(),
-      questions_owed: questionsOwed,
-      updated_at: now.toISOString(),
-    }, { onConflict: "user_id" });
+    .upsert(update, { onConflict: "user_id" });
   if (writeError) {
     return jsonResponse({ error: "failed to update pass state" }, 500);
   }
@@ -89,5 +92,6 @@ Deno.serve(async (req) => {
     questions_owed: questionsOwed,
     entries_this_hour: entriesThisHour,
     window_started_at: windowStartedAt.toISOString(),
+    pass_expires_at: passExpiresAt?.toISOString() ?? null,
   });
 });

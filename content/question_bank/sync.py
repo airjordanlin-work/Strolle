@@ -5,7 +5,7 @@ content/question_bank/ is the only place questions are edited. This
 script writes the derived files from it:
 
   app/assets/questions.json                               (byte copy)
-  backend/supabase/functions/grade-attempt/questions.json (byte copy)
+  backend/supabase/functions/_shared/questions.json (byte copy)
   backend/supabase/seed.sql                               (skills + questions rows)
 
   python3 content/question_bank/sync.py          # rewrite the copies
@@ -25,7 +25,7 @@ SKILLS = BANK / "skills.json"
 
 COPIES = [
     ROOT / "app/assets/questions.json",
-    ROOT / "backend/supabase/functions/grade-attempt/questions.json",
+    ROOT / "backend/supabase/functions/_shared/questions.json",
 ]
 SEED = ROOT / "backend/supabase/seed.sql"
 

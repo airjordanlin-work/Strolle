@@ -17,8 +17,12 @@ decisions still hold.
 - **grade-attempt fixes** (migration 0003): uses the real `streak` column,
   keys review items by question slug, enforces the iOS 5-minute pass
   floor, discards answers under 2 seconds, and only grants the pass once
-  every owed question is answered. See `backend/MANUAL_TEST.md` for unit,
-  integration and manual tests.
+  every owed question is answered.
+- **Server-side timing and free-entry pass** (migration 0004):
+  `start-attempt` records each served question in `gate_serves`, and
+  grade-attempt measures the 2-second guess threshold from it. A free
+  entry gets its pass from register-entry. See `TESTING.md` for unit,
+  integration, visual and manual tests.
 - **Question bank** (`content/question_bank/`): 56 original SAT-style items
   (31 math, 25 reading/writing) tagged by skill and 4D, a skill taxonomy, and
   `validate.py`. All items are `reviewed: false`.
@@ -35,18 +39,16 @@ decisions still hold.
 
 ## Open or in progress
 
-- **grade-attempt timing is client-reported.** The 2-second guess
-  threshold uses `elapsed_ms` from the client; timing it on the server
-  needs `/start-attempt`.
-- **A free entry grants no pass on the server yet.** When
-  `register-entry` returns 0 questions owed, nothing sets `pass_expires_at`.
-  CLAUDE.md says only grading may set it, so this needs a decision.
+- **The Flutter app doesn't call the backend yet.** Its gate still runs on
+  in-memory logic; wiring it to Supabase waits on the auth work.
+- **Question choice is still the client's.** `start-attempt` records what
+  the client serves; moving selection onto `_shared/adaptive.ts` is next.
 - **Pass state on iOS is on-device only.** `ios-prototype` still has to call
   `register-entry` and `grade-attempt` and cache `pass_expires_at`.
 - **No question is reviewed yet.** Nothing should be served until a person
   sets `reviewed: true`.
 - **questions.json exists in three places**: `content/question_bank/`
-  (the source), plus copies in `app/assets/` and `grade-attempt/` and the
+  (the source), plus copies in `app/assets/` and `backend/supabase/functions/_shared/` and the
   generated `backend/supabase/seed.sql`. Edit the source, then run
   `python3 content/question_bank/sync.py`; CI fails if a copy drifts.
 - **Open questions from the design doc** (Jordan to decide):
