@@ -1,9 +1,10 @@
 // Called when the gate opens, before any question is shown. Advances
 // pass_state's rolling-hour entry window and returns how many questions
 // are owed for this entry. This is the only function allowed to write
-// pass_state.entries_this_hour / hour_window_started — grade-attempt
-// owns pass_expires_at and review_items, and this function never
-// touches either.
+// pass_state.entries_this_hour / hour_window_started. It also sets
+// questions_owed, which grade-attempt counts down; grade-attempt owns
+// pass_expires_at and review_items, and this function never touches
+// either.
 //
 // The schema stores one window-start timestamp plus a count, not a log
 // of individual entry times, so this is a tumbling window (it resets
@@ -69,19 +70,23 @@ Deno.serve(async (req) => {
     : (existing?.entries_this_hour ?? 0) + 1;
   const windowStartedAt = windowExpired ? now : windowStarted;
 
+  const questionsOwed = costForEntry(entriesThisHour);
+
   const { error: writeError } = await db
     .from("pass_state")
     .upsert({
       user_id: userId,
       entries_this_hour: entriesThisHour,
       hour_window_started: windowStartedAt.toISOString(),
+      questions_owed: questionsOwed,
+      updated_at: now.toISOString(),
     }, { onConflict: "user_id" });
   if (writeError) {
     return jsonResponse({ error: "failed to update pass state" }, 500);
   }
 
   return jsonResponse({
-    questions_owed: costForEntry(entriesThisHour),
+    questions_owed: questionsOwed,
     entries_this_hour: entriesThisHour,
     window_started_at: windowStartedAt.toISOString(),
   });

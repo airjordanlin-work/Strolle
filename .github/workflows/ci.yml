@@ -20,3 +20,14 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: python3 content/question_bank/validate.py
+      - run: python3 content/question_bank/sync.py --check
+      - run: deno test --node-modules-dir=none supabase/functions/
+        working-directory: backend

@@ -12,8 +12,13 @@ decisions still hold.
   attempts, pass_state, review_items, profiles, all with RLS.
 - **grade-attempt** Edge Function: server-side grading, review interval
   update, writes `pass_expires_at`.
-- **register-entry** Edge Function: escalating entry cost. WIP, not tested
-  end to end.
+- **register-entry** Edge Function: escalating entry cost, and it records
+  how many questions are owed.
+- **grade-attempt fixes** (migration 0003): uses the real `streak` column,
+  keys review items by question slug, enforces the iOS 5-minute pass
+  floor, discards answers under 2 seconds, and only grants the pass once
+  every owed question is answered. See `backend/MANUAL_TEST.md` for unit,
+  integration and manual tests.
 - **Question bank** (`content/question_bank/`): 56 original SAT-style items
   (31 math, 25 reading/writing) tagged by skill and 4D, a skill taxonomy, and
   `validate.py`. All items are `reviewed: false`.
@@ -30,24 +35,24 @@ decisions still hold.
 
 ## Open or in progress
 
-- **Schema mismatches in grade-attempt.** It writes
-  `review_items.consecutive_correct`, but the column is `streak`. It writes
-  `pass_state.updated_at`, which doesn't exist. And `question_id` is a uuid in
-  the schema, while the bank uses slugs like `m-005`.
-- **Pass length isn't platform-aware.** grade-attempt grants a 90 s pass on a
-  wrong answer, below the 5-minute iOS floor.
+- **grade-attempt timing is client-reported.** The 2-second guess
+  threshold uses `elapsed_ms` from the client; timing it on the server
+  needs `/start-attempt`.
+- **A free entry grants no pass on the server yet.** When
+  `register-entry` returns 0 questions owed, nothing sets `pass_expires_at`.
+  CLAUDE.md says only grading may set it, so this needs a decision.
 - **Pass state on iOS is on-device only.** `ios-prototype` still has to call
   `register-entry` and `grade-attempt` and cache `pass_expires_at`.
 - **No question is reviewed yet.** Nothing should be served until a person
   sets `reviewed: true`.
 - **questions.json exists in three places**: `content/question_bank/`
-  (the source), plus copies in `app/assets/` and `grade-attempt/`. Edit the
-  source and copy it over; don't edit the copies.
+  (the source), plus copies in `app/assets/` and `grade-attempt/` and the
+  generated `backend/supabase/seed.sql`. Edit the source, then run
+  `python3 content/question_bank/sync.py`; CI fails if a copy drifts.
 - **Open questions from the design doc** (Jordan to decide):
   - Offline: grant a provisional floor pass, or no pass until the server answers?
   - iOS pass end: treat server wall-clock time as the authority?
   - 4Ds: is the study-habit reading what you intended?
-  - `review_items`: name the column `streak` or `consecutive_correct`?
   - Is it OK to ask users for practice-test scores during onboarding?
   - Merge register-entry and grade-attempt into one `/gate-answer` call?
 

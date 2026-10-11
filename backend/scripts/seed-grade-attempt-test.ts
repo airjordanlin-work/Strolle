@@ -8,10 +8,9 @@
 // specifier below instead of fetching it directly.)
 //
 // Creates (or reuses) a test auth user, signs in to mint a real access
-// token, makes sure that user has a pass_state row (grade-attempt does
-// an UPDATE, not an upsert, so the row has to exist first), and prints
-// a real question_id from the bundled question set — everything needed
-// to construct a curl call against grade-attempt.
+// token, and prints a real gate question_id with its answer key from the
+// bundled question set: everything needed to construct a curl call
+// against grade-attempt. See backend/MANUAL_TEST.md.
 //
 // Defaults below are the Supabase CLI's well-known local dev keys
 // (same on every machine, never valid against a real project). Override
@@ -60,31 +59,25 @@ if (signInError || !signedIn.session) {
 }
 const accessToken = signedIn.session.access_token;
 
-const { error: passStateError } = await admin
-  .from("pass_state")
-  .upsert({ user_id: userId, platform: "ios" }, {
-    onConflict: "user_id",
-    ignoreDuplicates: true,
-  });
-if (passStateError) throw passStateError;
-
 const questionsPath = new URL(
   "../supabase/functions/grade-attempt/questions.json",
   import.meta.url,
 );
-const questions: Array<{ id: string }> = JSON.parse(
-  await Deno.readTextFile(questionsPath),
-);
-const sampleQuestionId = questions[0].id;
+const questions: Array<
+  { id: string; tier: string; correct_index: number }
+> = JSON.parse(await Deno.readTextFile(questionsPath));
+const sample = questions.find((q) => q.tier === "gate")!;
+const sampleQuestionId = sample.id;
 
 console.log(`user_id:       ${userId}`);
 console.log(`access_token:  ${accessToken}`);
 console.log(`question_id:   ${sampleQuestionId}`);
+console.log(`correct_index: ${sample.correct_index}`);
 console.log();
 console.log("Example call:");
 console.log(
   `curl -i "${SUPABASE_URL}/functions/v1/grade-attempt" \\
   -H "Authorization: Bearer ${accessToken}" \\
   -H "Content-Type: application/json" \\
-  -d '{"question_id": "${sampleQuestionId}", "choice_index": 0}'`,
+  -d '{"question_id": "${sampleQuestionId}", "choice_index": ${sample.correct_index}, "elapsed_ms": 4000}'`,
 );
