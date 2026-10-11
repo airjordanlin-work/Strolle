@@ -2,243 +2,199 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select extensions.plan(31);
+select extensions.plan(112);
 
 -- Enum values are API contracts shared with the Flutter client.
-select extensions.results_eq(
-  $$
-    select e.enumlabel::text
-    from pg_catalog.pg_type t
-    join pg_catalog.pg_namespace n on n.oid = t.typnamespace
-    join pg_catalog.pg_enum e on e.enumtypid = t.oid
-    where n.nspname = 'public' and t.typname = 'answer_result'
-    order by e.enumsortorder
-  $$,
-  $$values ('correct'::text), ('incorrect'::text), ('too_fast'::text)$$,
+select extensions.enum_has_labels(
+  'public', 'answer_result', array['correct', 'incorrect', 'too_fast'],
   'answer_result exposes exactly the supported grading outcomes'
 );
 
-select extensions.results_eq(
-  $$
-    select e.enumlabel::text
-    from pg_catalog.pg_type t
-    join pg_catalog.pg_namespace n on n.oid = t.typnamespace
-    join pg_catalog.pg_enum e on e.enumtypid = t.oid
-    where n.nspname = 'public' and t.typname = 'device_platform'
-    order by e.enumsortorder
-  $$,
-  $$values ('ios'::text), ('android'::text)$$,
+select extensions.enum_has_labels(
+  'public', 'device_platform', array['ios', 'android'],
   'device_platform rejects unsupported pass-length strategies'
 );
 
-select extensions.set_eq(
-  $$
-    select table_name::text
-    from information_schema.tables
-    where table_schema = 'public'
-      and table_name in ('review_items', 'pass_state', 'attempts')
-  $$,
-  $$values ('review_items'::text), ('pass_state'::text), ('attempts'::text)$$,
-  'the migration creates all three server-authoritative tables'
-);
+select extensions.has_table('public', 'review_items', 'the migration creates review_items');
+select extensions.has_table('public', 'pass_state', 'the migration creates pass_state');
+select extensions.has_table('public', 'attempts', 'the migration creates attempts');
 
--- Keep each table's full shape in one readable contract assertion so an
+-- Keep each table's full shape as one assertion per column/fact so an
 -- accidental rename, type change, nullable field, or default is caught.
-select extensions.results_eq(
-  $$
-    select
-      column_name::text,
-      udt_name::text,
-      is_nullable::text,
-      coalesce(column_default, '')::text
-    from information_schema.columns
-    where table_schema = 'public' and table_name = 'review_items'
-    order by ordinal_position
-  $$,
-  $$
-    values
-      ('user_id'::text, 'uuid'::text, 'NO'::text, ''::text),
-      ('question_id'::text, 'text'::text, 'NO'::text, ''::text),
-      ('due_at'::text, 'timestamptz'::text, 'NO'::text, ''::text),
-      ('interval_minutes'::text, 'int4'::text, 'NO'::text, '10'::text),
-      ('consecutive_correct'::text, 'int4'::text, 'NO'::text, '0'::text)
-  $$,
-  'review_items mirrors ReviewItem and its defaults'
+select extensions.has_column('public', 'review_items', 'user_id', 'review_items has user_id');
+select extensions.col_type_is('public', 'review_items', 'user_id', 'uuid', 'review_items.user_id is uuid');
+select extensions.col_not_null('public', 'review_items', 'user_id', 'review_items.user_id is required');
+
+select extensions.has_column('public', 'review_items', 'question_id', 'review_items has question_id');
+select extensions.col_type_is('public', 'review_items', 'question_id', 'text', 'review_items.question_id is text');
+select extensions.col_not_null('public', 'review_items', 'question_id', 'review_items.question_id is required');
+
+select extensions.has_column('public', 'review_items', 'due_at', 'review_items has due_at');
+select extensions.col_type_is('public', 'review_items', 'due_at', 'timestamp with time zone', 'review_items.due_at is timestamptz');
+select extensions.col_not_null('public', 'review_items', 'due_at', 'review_items.due_at is required');
+
+select extensions.has_column('public', 'review_items', 'interval_minutes', 'review_items has interval_minutes');
+select extensions.col_type_is('public', 'review_items', 'interval_minutes', 'integer', 'review_items.interval_minutes is integer');
+select extensions.col_not_null('public', 'review_items', 'interval_minutes', 'review_items.interval_minutes is required');
+select extensions.col_default_is('public', 'review_items', 'interval_minutes', 10, 'review_items.interval_minutes defaults to 10');
+
+select extensions.has_column('public', 'review_items', 'consecutive_correct', 'review_items has consecutive_correct');
+select extensions.col_type_is('public', 'review_items', 'consecutive_correct', 'integer', 'review_items.consecutive_correct is integer');
+select extensions.col_not_null('public', 'review_items', 'consecutive_correct', 'review_items.consecutive_correct is required');
+select extensions.col_default_is('public', 'review_items', 'consecutive_correct', 0, 'review_items.consecutive_correct defaults to 0');
+
+select extensions.has_column('public', 'pass_state', 'user_id', 'pass_state has user_id');
+select extensions.col_type_is('public', 'pass_state', 'user_id', 'uuid', 'pass_state.user_id is uuid');
+select extensions.col_not_null('public', 'pass_state', 'user_id', 'pass_state.user_id is required');
+
+select extensions.has_column('public', 'pass_state', 'platform', 'pass_state has platform');
+select extensions.col_type_is('public', 'pass_state', 'platform', 'device_platform', 'pass_state.platform is device_platform');
+select extensions.col_not_null('public', 'pass_state', 'platform', 'pass_state.platform is required');
+
+select extensions.has_column('public', 'pass_state', 'pass_expires_at', 'pass_state has pass_expires_at');
+select extensions.col_type_is('public', 'pass_state', 'pass_expires_at', 'timestamp with time zone', 'pass_state.pass_expires_at is timestamptz');
+
+select extensions.has_column('public', 'pass_state', 'window_started_at', 'pass_state has window_started_at');
+select extensions.col_type_is('public', 'pass_state', 'window_started_at', 'timestamp with time zone', 'pass_state.window_started_at is timestamptz');
+select extensions.col_not_null('public', 'pass_state', 'window_started_at', 'pass_state.window_started_at is required');
+select extensions.col_default_is('public', 'pass_state', 'window_started_at', 'now()', 'pass_state.window_started_at defaults to now()');
+
+select extensions.has_column('public', 'pass_state', 'entries_this_window', 'pass_state has entries_this_window');
+select extensions.col_type_is('public', 'pass_state', 'entries_this_window', 'integer', 'pass_state.entries_this_window is integer');
+select extensions.col_not_null('public', 'pass_state', 'entries_this_window', 'pass_state.entries_this_window is required');
+select extensions.col_default_is('public', 'pass_state', 'entries_this_window', 0, 'pass_state.entries_this_window defaults to 0');
+
+select extensions.has_column('public', 'pass_state', 'updated_at', 'pass_state has updated_at');
+select extensions.col_type_is('public', 'pass_state', 'updated_at', 'timestamp with time zone', 'pass_state.updated_at is timestamptz');
+select extensions.col_not_null('public', 'pass_state', 'updated_at', 'pass_state.updated_at is required');
+select extensions.col_default_is('public', 'pass_state', 'updated_at', 'now()', 'pass_state.updated_at defaults to now()');
+
+select extensions.has_column('public', 'attempts', 'id', 'attempts has id');
+select extensions.col_type_is('public', 'attempts', 'id', 'uuid', 'attempts.id is uuid');
+select extensions.col_not_null('public', 'attempts', 'id', 'attempts.id is required');
+select extensions.col_default_is('public', 'attempts', 'id', 'gen_random_uuid()', 'attempts.id defaults to gen_random_uuid()');
+
+select extensions.has_column('public', 'attempts', 'user_id', 'attempts has user_id');
+select extensions.col_type_is('public', 'attempts', 'user_id', 'uuid', 'attempts.user_id is uuid');
+select extensions.col_not_null('public', 'attempts', 'user_id', 'attempts.user_id is required');
+
+select extensions.has_column('public', 'attempts', 'question_id', 'attempts has question_id');
+select extensions.col_type_is('public', 'attempts', 'question_id', 'text', 'attempts.question_id is text');
+select extensions.col_not_null('public', 'attempts', 'question_id', 'attempts.question_id is required');
+
+select extensions.has_column('public', 'attempts', 'started_at', 'attempts has started_at');
+select extensions.col_type_is('public', 'attempts', 'started_at', 'timestamp with time zone', 'attempts.started_at is timestamptz');
+select extensions.col_not_null('public', 'attempts', 'started_at', 'attempts.started_at is required');
+select extensions.col_default_is('public', 'attempts', 'started_at', 'now()', 'attempts.started_at defaults to now()');
+
+select extensions.has_column('public', 'attempts', 'answered_at', 'attempts has answered_at');
+select extensions.col_type_is('public', 'attempts', 'answered_at', 'timestamp with time zone', 'attempts.answered_at is timestamptz');
+
+select extensions.has_column('public', 'attempts', 'result', 'attempts has result');
+select extensions.col_type_is('public', 'attempts', 'result', 'answer_result', 'attempts.result is answer_result');
+
+select extensions.has_column('public', 'attempts', 'response_time_ms', 'attempts has response_time_ms');
+select extensions.col_type_is('public', 'attempts', 'response_time_ms', 'integer', 'attempts.response_time_ms is integer');
+
+-- Primary keys enforce one pass state and one review item per user/question.
+select extensions.col_is_pk('public', 'review_items', array['user_id', 'question_id'], 'review_items keys on (user_id, question_id)');
+select extensions.col_is_pk('public', 'pass_state', 'user_id', 'pass_state keys on user_id');
+select extensions.col_is_pk('public', 'attempts', 'id', 'attempts keys on id');
+
+-- Every user-scoped row cascades when its auth user is removed.
+select extensions.fk_ok('public', 'review_items', 'user_id', 'auth', 'users', 'id', 'review_items.user_id references auth.users');
+select extensions.is(
+  (select confdeltype from pg_catalog.pg_constraint where conrelid = 'public.review_items'::regclass and contype = 'f'),
+  'c', 'review_items.user_id cascades on delete'
 );
 
-select extensions.results_eq(
-  $$
-    select
-      column_name::text,
-      udt_name::text,
-      is_nullable::text,
-      coalesce(column_default, '')::text
-    from information_schema.columns
-    where table_schema = 'public' and table_name = 'pass_state'
-    order by ordinal_position
-  $$,
-  $$
-    values
-      ('user_id'::text, 'uuid'::text, 'NO'::text, ''::text),
-      ('platform'::text, 'device_platform'::text, 'NO'::text, ''::text),
-      ('pass_expires_at'::text, 'timestamptz'::text, 'YES'::text, ''::text),
-      ('window_started_at'::text, 'timestamptz'::text, 'NO'::text, 'now()'::text),
-      ('entries_this_window'::text, 'int4'::text, 'NO'::text, '0'::text),
-      ('updated_at'::text, 'timestamptz'::text, 'NO'::text, 'now()'::text)
-  $$,
-  'pass_state persists platform-aware pass and rolling-window state'
+select extensions.fk_ok('public', 'pass_state', 'user_id', 'auth', 'users', 'id', 'pass_state.user_id references auth.users');
+select extensions.is(
+  (select confdeltype from pg_catalog.pg_constraint where conrelid = 'public.pass_state'::regclass and contype = 'f'),
+  'c', 'pass_state.user_id cascades on delete'
 );
 
-select extensions.results_eq(
-  $$
-    select
-      column_name::text,
-      udt_name::text,
-      is_nullable::text,
-      coalesce(column_default, '')::text
-    from information_schema.columns
-    where table_schema = 'public' and table_name = 'attempts'
-    order by ordinal_position
-  $$,
-  $$
-    values
-      ('id'::text, 'uuid'::text, 'NO'::text, 'gen_random_uuid()'::text),
-      ('user_id'::text, 'uuid'::text, 'NO'::text, ''::text),
-      ('question_id'::text, 'text'::text, 'NO'::text, ''::text),
-      ('started_at'::text, 'timestamptz'::text, 'NO'::text, 'now()'::text),
-      ('answered_at'::text, 'timestamptz'::text, 'YES'::text, ''::text),
-      ('result'::text, 'answer_result'::text, 'YES'::text, ''::text),
-      ('response_time_ms'::text, 'int4'::text, 'YES'::text, ''::text)
-  $$,
-  'attempts supports ungraded starts and graded outcomes'
+select extensions.fk_ok('public', 'attempts', 'user_id', 'auth', 'users', 'id', 'attempts.user_id references auth.users');
+select extensions.is(
+  (select confdeltype from pg_catalog.pg_constraint where conrelid = 'public.attempts'::regclass and contype = 'f'),
+  'c', 'attempts.user_id cascades on delete'
 );
 
-select extensions.results_eq(
-  $$
-    select
-      table_class.relname::text,
-      array_agg(column_attribute.attname::text order by key_column.ordinality)::text[]
-    from pg_catalog.pg_index table_index
-    join pg_catalog.pg_class table_class on table_class.oid = table_index.indrelid
-    join unnest(table_index.indkey) with ordinality as key_column(attnum, ordinality) on true
-    join pg_catalog.pg_attribute column_attribute
-      on column_attribute.attrelid = table_class.oid
-     and column_attribute.attnum = key_column.attnum
-    join pg_catalog.pg_namespace table_namespace on table_namespace.oid = table_class.relnamespace
-    where table_namespace.nspname = 'public'
-      and table_class.relname in ('review_items', 'pass_state', 'attempts')
-      and table_index.indisprimary
-    group by table_class.relname
-    order by table_class.relname
-  $$,
-  $$
-    values
-      ('attempts'::text, array['id']::text[]),
-      ('pass_state'::text, array['user_id']::text[]),
-      ('review_items'::text, array['user_id', 'question_id']::text[])
-  $$,
-  'primary keys enforce one pass state and one review item per user/question'
+-- Lookup indexes support per-user chronological queue and attempt reads.
+select extensions.indexes_are(
+  'public', 'review_items', array['review_items_pkey', 'review_items_user_id_due_at_idx'],
+  'review_items has only its primary key and the due_at lookup index'
+);
+select extensions.indexes_are(
+  'public', 'pass_state', array['pass_state_pkey'],
+  'pass_state has only its primary key'
+);
+select extensions.indexes_are(
+  'public', 'attempts', array['attempts_pkey', 'attempts_user_id_started_at_idx'],
+  'attempts has only its primary key and the started_at lookup index'
 );
 
-select extensions.results_eq(
-  $$
-    select
-      source_table.relname::text,
-      source_column.attname::text,
-      target_namespace.nspname::text,
-      target_table.relname::text,
-      target_column.attname::text,
-      constraint_row.confdeltype::text
-    from pg_catalog.pg_constraint constraint_row
-    join pg_catalog.pg_class source_table on source_table.oid = constraint_row.conrelid
-    join pg_catalog.pg_namespace source_namespace on source_namespace.oid = source_table.relnamespace
-    join pg_catalog.pg_class target_table on target_table.oid = constraint_row.confrelid
-    join pg_catalog.pg_namespace target_namespace on target_namespace.oid = target_table.relnamespace
-    join pg_catalog.pg_attribute source_column
-      on source_column.attrelid = source_table.oid
-     and source_column.attnum = constraint_row.conkey[1]
-    join pg_catalog.pg_attribute target_column
-      on target_column.attrelid = target_table.oid
-     and target_column.attnum = constraint_row.confkey[1]
-    where source_namespace.nspname = 'public'
-      and source_table.relname in ('review_items', 'pass_state', 'attempts')
-      and constraint_row.contype = 'f'
-    order by source_table.relname
-  $$,
-  $$
-    values
-      ('attempts'::text, 'user_id'::text, 'auth'::text, 'users'::text, 'id'::text, 'c'::text),
-      ('pass_state'::text, 'user_id'::text, 'auth'::text, 'users'::text, 'id'::text, 'c'::text),
-      ('review_items'::text, 'user_id'::text, 'auth'::text, 'users'::text, 'id'::text, 'c'::text)
-  $$,
-  'every user-scoped row cascades when its auth user is removed'
+-- RLS is enabled on every user-scoped table.
+select extensions.ok(
+  (select relrowsecurity from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relname = 'review_items'),
+  'RLS is enabled on review_items'
+);
+select extensions.ok(
+  (select relrowsecurity from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relname = 'pass_state'),
+  'RLS is enabled on pass_state'
+);
+select extensions.ok(
+  (select relrowsecurity from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public' and c.relname = 'attempts'),
+  'RLS is enabled on attempts'
 );
 
-select extensions.results_eq(
-  $$
-    select
-      table_class.relname::text,
-      array_agg(column_attribute.attname::text order by key_column.ordinality)::text[]
-    from pg_catalog.pg_index table_index
-    join pg_catalog.pg_class table_class on table_class.oid = table_index.indrelid
-    join unnest(table_index.indkey) with ordinality as key_column(attnum, ordinality) on true
-    join pg_catalog.pg_attribute column_attribute
-      on column_attribute.attrelid = table_class.oid
-     and column_attribute.attnum = key_column.attnum
-    join pg_catalog.pg_namespace table_namespace on table_namespace.oid = table_class.relnamespace
-    where table_namespace.nspname = 'public'
-      and table_class.relname in ('review_items', 'attempts')
-      and not table_index.indisprimary
-    group by table_class.relname
-    order by table_class.relname
-  $$,
-  $$
-    values
-      ('attempts'::text, array['user_id', 'started_at']::text[]),
-      ('review_items'::text, array['user_id', 'due_at']::text[])
-  $$,
-  'lookup indexes support per-user chronological queue and attempt reads'
+-- Clients receive only owner-scoped select policies, nothing wider.
+select extensions.policies_are('public', 'review_items', array['own_review_items'], 'review_items exposes exactly one policy');
+select extensions.policy_cmd_is('public', 'review_items', 'own_review_items', 'SELECT', 'own_review_items is select-only');
+select extensions.is(
+  (select roles from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'review_items' and policyname = 'own_review_items'),
+  '{public}'::name[], 'own_review_items applies to public'
+);
+select extensions.is(
+  (select qual from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'review_items' and policyname = 'own_review_items'),
+  '(auth.uid() = user_id)', 'own_review_items scopes rows to their owner'
+);
+select extensions.is(
+  (select with_check from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'review_items' and policyname = 'own_review_items'),
+  null, 'own_review_items has no write check, since it grants no write'
 );
 
-select extensions.results_eq(
-  $$
-    select relname::text, relrowsecurity
-    from pg_catalog.pg_class table_class
-    join pg_catalog.pg_namespace table_namespace on table_namespace.oid = table_class.relnamespace
-    where table_namespace.nspname = 'public'
-      and relname in ('review_items', 'pass_state', 'attempts')
-    order by relname
-  $$,
-  $$
-    values
-      ('attempts'::text, true),
-      ('pass_state'::text, true),
-      ('review_items'::text, true)
-  $$,
-  'RLS is enabled on every user-scoped table'
+select extensions.policies_are('public', 'pass_state', array['own_pass_state'], 'pass_state exposes exactly one policy');
+select extensions.policy_cmd_is('public', 'pass_state', 'own_pass_state', 'SELECT', 'own_pass_state is select-only');
+select extensions.is(
+  (select roles from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'pass_state' and policyname = 'own_pass_state'),
+  '{public}'::name[], 'own_pass_state applies to public'
+);
+select extensions.is(
+  (select qual from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'pass_state' and policyname = 'own_pass_state'),
+  '(auth.uid() = user_id)', 'own_pass_state scopes rows to their owner'
+);
+select extensions.is(
+  (select with_check from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'pass_state' and policyname = 'own_pass_state'),
+  null, 'own_pass_state has no write check, since it grants no write'
 );
 
-select extensions.results_eq(
-  $$
-    select
-      tablename::text,
-      policyname::text,
-      cmd::text,
-      roles::text,
-      (qual = '(auth.uid() = user_id)') as owns_row,
-      (with_check is null) as no_write_check
-    from pg_catalog.pg_policies
-    where schemaname = 'public'
-      and tablename in ('review_items', 'pass_state', 'attempts')
-    order by tablename, policyname
-  $$,
-  $$
-    values
-      ('attempts'::text, 'own_attempts'::text, 'SELECT'::text, '{public}'::text, true, true),
-      ('pass_state'::text, 'own_pass_state'::text, 'SELECT'::text, '{public}'::text, true, true),
-      ('review_items'::text, 'own_review_items'::text, 'SELECT'::text, '{public}'::text, true, true)
-  $$,
-  'clients receive only owner-scoped select policies'
+select extensions.policies_are('public', 'attempts', array['own_attempts'], 'attempts exposes exactly one policy');
+select extensions.policy_cmd_is('public', 'attempts', 'own_attempts', 'SELECT', 'own_attempts is select-only');
+select extensions.is(
+  (select roles from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'attempts' and policyname = 'own_attempts'),
+  '{public}'::name[], 'own_attempts applies to public'
+);
+select extensions.is(
+  (select qual from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'attempts' and policyname = 'own_attempts'),
+  '(auth.uid() = user_id)', 'own_attempts scopes rows to their owner'
+);
+select extensions.is(
+  (select with_check from pg_catalog.pg_policies where schemaname = 'public' and tablename = 'attempts' and policyname = 'own_attempts'),
+  null, 'own_attempts has no write check, since it grants no write'
 );
 
 select extensions.is(
@@ -518,11 +474,11 @@ select extensions.results_eq(
     ), changed_pass as (
       update public.pass_state
       set entries_this_window = 99
-      returning 'pass_state'::text
+      returning 'pass_state'::text as relation_name
     ), changed_attempt as (
       update public.attempts
       set response_time_ms = 99
-      returning 'attempts'::text
+      returning 'attempts'::text as relation_name
     )
     select relation_name from changed_review
     union all select relation_name from changed_pass
@@ -537,9 +493,9 @@ select extensions.results_eq(
     with deleted_review as (
       delete from public.review_items returning 'review_items'::text as relation_name
     ), deleted_pass as (
-      delete from public.pass_state returning 'pass_state'::text
+      delete from public.pass_state returning 'pass_state'::text as relation_name
     ), deleted_attempt as (
-      delete from public.attempts returning 'attempts'::text
+      delete from public.attempts returning 'attempts'::text as relation_name
     )
     select relation_name from deleted_review
     union all select relation_name from deleted_pass
