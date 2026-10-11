@@ -1,0 +1,27 @@
+{
+  "_note": "Skill taxonomy follows the published digital SAT domains. sat_weight is the approximate share of the section each domain makes up, split evenly across that domain's skills. Used by the adaptive selector to favor skills that move the score most.",
+  "four_d": {
+    "description": "Putting meaning into precise words or symbols: choosing the exact word, translating a situation into an equation, writing a sentence that follows the rules.",
+    "discernment": "Judging quality and fit: which evidence supports a claim, which conclusion a text or data set actually allows, which relationship links two ideas.",
+    "delegation": "Choosing the right approach before doing the work: which formula or shortcut to reach for, which facts from a set of notes serve a stated goal.",
+    "diligence": "Careful execution and checking: multi-step arithmetic, sign and inequality flips, agreement and punctuation traps, reading every data point."
+  },
+  "domains": [
+    { "section": "math", "domain": "algebra", "sat_weight": 0.35,
+      "skills": ["linear-equations", "linear-functions", "linear-equations-two-variables", "systems-of-linear-equations", "linear-inequalities"] },
+    { "section": "math", "domain": "advanced-math", "sat_weight": 0.35,
+      "skills": ["equivalent-expressions", "nonlinear-equations", "nonlinear-functions"] },
+    { "section": "math", "domain": "problem-solving-data-analysis", "sat_weight": 0.15,
+      "skills": ["ratios-rates-proportions", "percentages", "units", "one-variable-data", "two-variable-data", "probability", "sample-inference"] },
+    { "section": "math", "domain": "geometry-trigonometry", "sat_weight": 0.15,
+      "skills": ["area-volume", "lines-angles-triangles", "right-triangles-trig", "circles"] },
+    { "section": "reading", "domain": "craft-structure", "sat_weight": 0.28,
+      "skills": ["vocabulary-in-context", "text-structure-purpose", "cross-text-connections"] },
+    { "section": "reading", "domain": "information-ideas", "sat_weight": 0.26,
+      "skills": ["central-ideas", "command-of-evidence-textual", "command-of-evidence-quantitative", "inferences"] },
+    { "section": "writing", "domain": "standard-english-conventions", "sat_weight": 0.26,
+      "skills": ["boundaries", "form-structure-sense"] },
+    { "section": "writing", "domain": "expression-of-ideas", "sat_weight": 0.20,
+      "skills": ["transitions", "rhetorical-synthesis"] }
+  ]
+}

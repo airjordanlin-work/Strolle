@@ -5,10 +5,18 @@
     "skill": "transitions",
     "difficulty": 2,
     "tier": "gate",
+    "four_d": "discernment",
+    "time_target_seconds": 15,
     "stem": "The results were inconclusive. ______, the team repeated the experiment.",
-    "choices": ["Therefore", "However", "Similarly", "Nevertheless"],
+    "choices": [
+      "Therefore",
+      "However",
+      "Similarly",
+      "Nevertheless"
+    ],
     "correct_index": 0,
-    "explanation": "The second sentence is a consequence of the first, so a cause-and-effect transition fits."
+    "explanation": "The second sentence is a consequence of the first, so a cause-and-effect transition fits.",
+    "reviewed": false
   },
   {
     "id": "seed-002",
@@ -16,10 +24,18 @@
     "skill": "linear-equations",
     "difficulty": 1,
     "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
     "stem": "If 3x + 6 = 21, what is x?",
-    "choices": ["3", "5", "7", "9"],
+    "choices": [
+      "3",
+      "5",
+      "7",
+      "9"
+    ],
     "correct_index": 1,
-    "explanation": "Subtract 6 to get 3x = 15, then divide by 3."
+    "explanation": "Subtract 6 to get 3x = 15, then divide by 3.",
+    "reviewed": false
   },
   {
     "id": "seed-003",
@@ -27,9 +43,1033 @@
     "skill": "vocabulary-in-context",
     "difficulty": 3,
     "tier": "gate",
-    "stem": "As used in the sentence, 'reserved' most nearly means:",
-    "choices": ["set aside", "shy", "doubtful", "booked"],
+    "four_d": "description",
+    "time_target_seconds": 15,
+    "stem": "The library reserved the top shelf for its rare atlases. As used here, 'reserved' most nearly means:",
+    "choices": [
+      "set aside",
+      "shy",
+      "doubtful",
+      "booked"
+    ],
     "correct_index": 0,
-    "explanation": "Context governs the meaning, not the most common definition of the word."
+    "explanation": "Context governs the meaning, not the most common definition. A shelf kept for one purpose is 'set aside'; 'shy' is the meaning for people.",
+    "reviewed": false
+  },
+  {
+    "id": "m-001",
+    "section": "math",
+    "skill": "linear-equations",
+    "difficulty": 1,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "If 5x − 4 = 31, what is x?",
+    "choices": [
+      "5",
+      "6",
+      "7",
+      "35"
+    ],
+    "correct_index": 2,
+    "explanation": "Undo operations in reverse: add 4 to get 5x = 35, then divide by 5.",
+    "reviewed": false
+  },
+  {
+    "id": "m-002",
+    "section": "math",
+    "skill": "linear-functions",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "description",
+    "time_target_seconds": 15,
+    "stem": "A phone plan costs $12 per month plus a one-time $30 fee. Which expression gives the total cost, in dollars, for m months?",
+    "choices": [
+      "30m + 12",
+      "12m + 30",
+      "42m",
+      "12(m + 30)"
+    ],
+    "correct_index": 1,
+    "explanation": "The amount that repeats each month multiplies m; the one-time fee is added once.",
+    "reviewed": false
+  },
+  {
+    "id": "m-003",
+    "section": "math",
+    "skill": "linear-functions",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "What is the slope of the line through (1, 4) and (3, 10)?",
+    "choices": [
+      "2",
+      "3",
+      "6",
+      "1/3"
+    ],
+    "correct_index": 1,
+    "explanation": "Slope is change in y over change in x: (10 − 4) / (3 − 1) = 6 / 2 = 3.",
+    "reviewed": false
+  },
+  {
+    "id": "m-004",
+    "section": "math",
+    "skill": "linear-equations-two-variables",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "delegation",
+    "time_target_seconds": 15,
+    "stem": "What is the y-intercept of the line 2x + 3y = 12?",
+    "choices": [
+      "2",
+      "3",
+      "4",
+      "6"
+    ],
+    "correct_index": 2,
+    "explanation": "The y-intercept is where x = 0. Plug in x = 0 to get 3y = 12, so y = 4. No need to rewrite in slope-intercept form.",
+    "reviewed": false
+  },
+  {
+    "id": "m-005",
+    "section": "math",
+    "skill": "systems-of-linear-equations",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "delegation",
+    "time_target_seconds": 15,
+    "stem": "If x + y = 10 and x − y = 4, what is x?",
+    "choices": [
+      "3",
+      "6",
+      "7",
+      "14"
+    ],
+    "correct_index": 2,
+    "explanation": "Add the equations so y cancels: 2x = 14, so x = 7. Elimination is faster than substitution when the y terms are opposites.",
+    "reviewed": false
+  },
+  {
+    "id": "m-006",
+    "section": "math",
+    "skill": "linear-inequalities",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "Which value of x satisfies −2x > 6?",
+    "choices": [
+      "−4",
+      "−3",
+      "0",
+      "3"
+    ],
+    "correct_index": 0,
+    "explanation": "Dividing by a negative flips the inequality: x < −3. Only −4 is less than −3; −3 itself is not.",
+    "reviewed": false
+  },
+  {
+    "id": "m-007",
+    "section": "math",
+    "skill": "equivalent-expressions",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "description",
+    "time_target_seconds": 15,
+    "stem": "Which expression is equivalent to 3(x + 4) − x?",
+    "choices": [
+      "2x + 4",
+      "2x + 12",
+      "4x + 12",
+      "3x + 4"
+    ],
+    "correct_index": 1,
+    "explanation": "Distribute first: 3x + 12 − x. Then combine like terms: 2x + 12.",
+    "reviewed": false
+  },
+  {
+    "id": "m-008",
+    "section": "math",
+    "skill": "nonlinear-equations",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "If x² = 49 and x < 0, what is x?",
+    "choices": [
+      "−7",
+      "−49",
+      "7",
+      "−1/7"
+    ],
+    "correct_index": 0,
+    "explanation": "x² = 49 has two solutions, 7 and −7. The condition x < 0 rules out 7.",
+    "reviewed": false
+  },
+  {
+    "id": "m-009",
+    "section": "math",
+    "skill": "nonlinear-functions",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "If f(x) = x² − 3x, what is f(4)?",
+    "choices": [
+      "−4",
+      "4",
+      "8",
+      "28"
+    ],
+    "correct_index": 1,
+    "explanation": "Substitute 4 for every x: 4² − 3(4) = 16 − 12 = 4.",
+    "reviewed": false
+  },
+  {
+    "id": "m-010",
+    "section": "math",
+    "skill": "percentages",
+    "difficulty": 1,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "What is 20% of 45?",
+    "choices": [
+      "4.5",
+      "9",
+      "20",
+      "25"
+    ],
+    "correct_index": 1,
+    "explanation": "20% is one fifth, and 45 ÷ 5 = 9.",
+    "reviewed": false
+  },
+  {
+    "id": "m-011",
+    "section": "math",
+    "skill": "ratios-rates-proportions",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "delegation",
+    "time_target_seconds": 15,
+    "stem": "A recipe uses 3 cups of flour for every 2 cups of sugar. How many cups of flour go with 8 cups of sugar?",
+    "choices": [
+      "10",
+      "12",
+      "16",
+      "24"
+    ],
+    "correct_index": 1,
+    "explanation": "Sugar went from 2 to 8, a factor of 4, so flour goes from 3 to 3 × 4 = 12.",
+    "reviewed": false
+  },
+  {
+    "id": "m-012",
+    "section": "math",
+    "skill": "percentages",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "An $80 jacket is discounted 25%, and then the sale price is discounted another 10%. What is the final price?",
+    "choices": [
+      "$52",
+      "$54",
+      "$56",
+      "$58"
+    ],
+    "correct_index": 1,
+    "explanation": "Apply the discounts one at a time: 80 × 0.75 = 60, then 60 × 0.90 = 54. Taking 35% off at once gives the trap answer $52.",
+    "reviewed": false
+  },
+  {
+    "id": "m-013",
+    "section": "math",
+    "skill": "units",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "delegation",
+    "time_target_seconds": 15,
+    "stem": "A car travels at 60 miles per hour. How many miles does it travel in 25 minutes?",
+    "choices": [
+      "15",
+      "25",
+      "36",
+      "150"
+    ],
+    "correct_index": 1,
+    "explanation": "60 miles per hour is 1 mile per minute, so 25 minutes covers 25 miles. Convert to the unit the question uses.",
+    "reviewed": false
+  },
+  {
+    "id": "m-014",
+    "section": "math",
+    "skill": "one-variable-data",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "discernment",
+    "time_target_seconds": 15,
+    "stem": "What is the median of the data set 4, 7, 7, 9, 13?",
+    "choices": [
+      "7",
+      "8",
+      "9",
+      "40"
+    ],
+    "correct_index": 0,
+    "explanation": "The median is the middle value of the ordered list, which is 7. The mean is 8, which is the trap.",
+    "reviewed": false
+  },
+  {
+    "id": "m-015",
+    "section": "math",
+    "skill": "probability",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "A bag has 3 red, 5 blue, and 2 green marbles. What is the probability that a randomly chosen marble is NOT blue?",
+    "choices": [
+      "1/5",
+      "3/10",
+      "1/2",
+      "7/10"
+    ],
+    "correct_index": 2,
+    "explanation": "5 of the 10 marbles are not blue (3 red + 2 green), so the probability is 5/10 = 1/2. Watch for NOT in the question.",
+    "reviewed": false
+  },
+  {
+    "id": "m-016",
+    "section": "math",
+    "skill": "area-volume",
+    "difficulty": 1,
+    "tier": "gate",
+    "four_d": "delegation",
+    "time_target_seconds": 15,
+    "stem": "What is the area of a circle with radius 3?",
+    "choices": [
+      "3π",
+      "6π",
+      "9π",
+      "27π"
+    ],
+    "correct_index": 2,
+    "explanation": "Area is πr², so π × 3² = 9π. 6π is the circumference, a different formula.",
+    "reviewed": false
+  },
+  {
+    "id": "m-017",
+    "section": "math",
+    "skill": "lines-angles-triangles",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "Two angles of a triangle measure 48° and 67°. What is the third angle?",
+    "choices": [
+      "55°",
+      "65°",
+      "75°",
+      "115°"
+    ],
+    "correct_index": 1,
+    "explanation": "Angles in a triangle sum to 180°: 180 − 48 − 67 = 65.",
+    "reviewed": false
+  },
+  {
+    "id": "m-018",
+    "section": "math",
+    "skill": "right-triangles-trig",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "delegation",
+    "time_target_seconds": 15,
+    "stem": "A right triangle has legs of length 6 and 8. What is the length of the hypotenuse?",
+    "choices": [
+      "10",
+      "12",
+      "14",
+      "100"
+    ],
+    "correct_index": 0,
+    "explanation": "Recognize the 3-4-5 triple scaled by 2, or use a² + b² = c²: 36 + 64 = 100, so c = 10.",
+    "reviewed": false
+  },
+  {
+    "id": "m-019",
+    "section": "math",
+    "skill": "right-triangles-trig",
+    "difficulty": 4,
+    "tier": "gate",
+    "four_d": "discernment",
+    "time_target_seconds": 15,
+    "stem": "In right triangle ABC, angle C is 90° and sin A = 3/5. What is cos B?",
+    "choices": [
+      "3/5",
+      "4/5",
+      "5/3",
+      "3/4"
+    ],
+    "correct_index": 0,
+    "explanation": "A and B are complementary, and the sine of an angle equals the cosine of its complement. The side opposite A is the side adjacent to B.",
+    "reviewed": false
+  },
+  {
+    "id": "m-020",
+    "section": "math",
+    "skill": "circles",
+    "difficulty": 4,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "What is the center of the circle (x − 2)² + (y + 5)² = 36?",
+    "choices": [
+      "(2, −5)",
+      "(−2, 5)",
+      "(2, 5)",
+      "(6, 6)"
+    ],
+    "correct_index": 0,
+    "explanation": "The form (x − h)² + (y − k)² = r² has center (h, k). y + 5 means k = −5, so the center is (2, −5).",
+    "reviewed": false
+  },
+  {
+    "id": "m-s01",
+    "section": "math",
+    "skill": "linear-functions",
+    "difficulty": 3,
+    "tier": "session",
+    "four_d": "description",
+    "time_target_seconds": 75,
+    "stem": "A tank holds 500 liters of water and drains at a constant rate of 20 liters per minute. After how many minutes will 140 liters remain?",
+    "choices": [
+      "7",
+      "18",
+      "25",
+      "32"
+    ],
+    "correct_index": 1,
+    "explanation": "Write the situation as an equation: 500 − 20t = 140. Then 20t = 360, so t = 18.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s02",
+    "section": "math",
+    "skill": "systems-of-linear-equations",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "delegation",
+    "time_target_seconds": 75,
+    "stem": "Adult tickets cost $12 and student tickets cost $7. A group bought 15 tickets for a total of $145. How many adult tickets did the group buy?",
+    "choices": [
+      "5",
+      "7",
+      "8",
+      "10"
+    ],
+    "correct_index": 2,
+    "explanation": "Set up a + s = 15 and 12a + 7s = 145. Substitute s = 15 − a: 12a + 105 − 7a = 145, so 5a = 40 and a = 8.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s03",
+    "section": "math",
+    "skill": "nonlinear-equations",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "delegation",
+    "time_target_seconds": 75,
+    "stem": "What is the sum of the solutions to x² − 5x − 14 = 0?",
+    "choices": [
+      "−5",
+      "5",
+      "9",
+      "14"
+    ],
+    "correct_index": 1,
+    "explanation": "For ax² + bx + c = 0 the solutions sum to −b/a = 5, no factoring needed. Check: (x − 7)(x + 2) gives 7 and −2, which sum to 5.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s04",
+    "section": "math",
+    "skill": "nonlinear-functions",
+    "difficulty": 5,
+    "tier": "session",
+    "four_d": "diligence",
+    "time_target_seconds": 75,
+    "stem": "The function h(t) = −16t² + 64t + 5 gives a ball's height, in feet, t seconds after it is thrown. What is the ball's maximum height, in feet?",
+    "choices": [
+      "5",
+      "64",
+      "69",
+      "133"
+    ],
+    "correct_index": 2,
+    "explanation": "The vertex is at t = −b/(2a) = −64/(−32) = 2. Then h(2) = −64 + 128 + 5 = 69.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s05",
+    "section": "math",
+    "skill": "two-variable-data",
+    "difficulty": 3,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "stem": "A line of best fit for hours studied, x, and test score, y, is y = 4.5x + 62. Which is the best interpretation of 4.5?",
+    "choices": [
+      "Each additional hour studied is associated with a predicted increase of 4.5 points.",
+      "A student who studies 0 hours is predicted to score 4.5.",
+      "Studying causes scores to rise by exactly 4.5 points per hour.",
+      "The average student studied 4.5 hours."
+    ],
+    "correct_index": 0,
+    "explanation": "The slope is the predicted change in y for each one-unit increase in x. A best-fit line shows association, not proof of cause.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s06",
+    "section": "math",
+    "skill": "sample-inference",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "stem": "A school surveyed 50 students chosen at random from its robotics club and found that 80% wanted a longer lunch period. Which conclusion is best supported?",
+    "choices": [
+      "About 80% of all students at the school want a longer lunch period.",
+      "About 80% of robotics club members likely want a longer lunch period.",
+      "Exactly 40 students at the school want a longer lunch period.",
+      "Most students at the school are in the robotics club."
+    ],
+    "correct_index": 1,
+    "explanation": "A random sample only supports conclusions about the group it was drawn from, which here is the robotics club, not the whole school.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s07",
+    "section": "math",
+    "skill": "percentages",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "diligence",
+    "time_target_seconds": 75,
+    "stem": "A town's population grew from 2,000 to 2,500 and then decreased by 20%. What is the final population?",
+    "choices": [
+      "1,500",
+      "2,000",
+      "2,100",
+      "2,400"
+    ],
+    "correct_index": 1,
+    "explanation": "The 20% is taken from 2,500: 2,500 × 0.8 = 2,000. A 25% rise followed by a 20% fall cancels because the percents use different bases.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s08",
+    "section": "math",
+    "skill": "area-volume",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "delegation",
+    "time_target_seconds": 75,
+    "stem": "A cylinder has a radius of 3 cm and a volume of 72π cm³. What is its height, in cm?",
+    "choices": [
+      "4",
+      "6",
+      "8",
+      "24"
+    ],
+    "correct_index": 2,
+    "explanation": "Volume of a cylinder is πr²h, so 9πh = 72π and h = 8.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s09",
+    "section": "math",
+    "skill": "equivalent-expressions",
+    "difficulty": 5,
+    "tier": "session",
+    "four_d": "description",
+    "time_target_seconds": 75,
+    "stem": "If (x + a)² = x² + 10x + c for all values of x, what is c?",
+    "choices": [
+      "5",
+      "10",
+      "25",
+      "100"
+    ],
+    "correct_index": 2,
+    "explanation": "Expanding gives x² + 2ax + a². Matching 2a = 10 gives a = 5, so c = a² = 25.",
+    "reviewed": false
+  },
+  {
+    "id": "m-s10",
+    "section": "math",
+    "skill": "linear-equations",
+    "difficulty": 5,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "stem": "For what value of k does the equation 3(x − 2) = kx + 4 have no solution?",
+    "choices": [
+      "−3",
+      "0",
+      "3",
+      "6"
+    ],
+    "correct_index": 2,
+    "explanation": "Expand to 3x − 6 = kx + 4. If k = 3 the x terms cancel and leave −6 = 4, which is never true. Any other k gives exactly one solution.",
+    "reviewed": false
+  },
+  {
+    "id": "w-001",
+    "section": "writing",
+    "skill": "boundaries",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "Which choice correctly completes the sentence? The bridge opened in ______ still crossed by thousands of drivers every day.",
+    "choices": [
+      "1932, it is",
+      "1932; it is",
+      "1932 it is",
+      "1932, it, is"
+    ],
+    "correct_index": 1,
+    "explanation": "Both halves are complete sentences, so they need a semicolon or a period. A comma alone between them is a comma splice.",
+    "reviewed": false
+  },
+  {
+    "id": "w-002",
+    "section": "writing",
+    "skill": "form-structure-sense",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "The box of old letters ______ stored in the attic for decades.",
+    "choices": [
+      "was",
+      "were",
+      "are",
+      "have been"
+    ],
+    "correct_index": 0,
+    "explanation": "The subject is 'box', not 'letters'. Skip the 'of' phrase to find it, then use a singular verb.",
+    "reviewed": false
+  },
+  {
+    "id": "w-003",
+    "section": "writing",
+    "skill": "form-structure-sense",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "The committee announced ______ decision on Friday.",
+    "choices": [
+      "its",
+      "it's",
+      "their",
+      "they're"
+    ],
+    "correct_index": 0,
+    "explanation": "A committee acting as one unit takes a singular pronoun. 'Its' shows possession; 'it's' means 'it is'.",
+    "reviewed": false
+  },
+  {
+    "id": "w-004",
+    "section": "writing",
+    "skill": "transitions",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "discernment",
+    "time_target_seconds": 15,
+    "stem": "Solar panels have become far cheaper over the past decade. ______, many homeowners still name cost as the main reason they haven't installed them.",
+    "choices": [
+      "Consequently",
+      "For example",
+      "Nevertheless",
+      "Similarly"
+    ],
+    "correct_index": 2,
+    "explanation": "The second sentence goes against what the first would lead you to expect, so it needs a contrast word.",
+    "reviewed": false
+  },
+  {
+    "id": "w-005",
+    "section": "writing",
+    "skill": "transitions",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "discernment",
+    "time_target_seconds": 15,
+    "stem": "Octopuses can change color in milliseconds. ______, some species can also change the texture of their skin.",
+    "choices": [
+      "In addition",
+      "Instead",
+      "In contrast",
+      "As a result"
+    ],
+    "correct_index": 0,
+    "explanation": "The second sentence adds another ability of the same kind, so an addition transition fits.",
+    "reviewed": false
+  },
+  {
+    "id": "w-006",
+    "section": "reading",
+    "skill": "vocabulary-in-context",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "description",
+    "time_target_seconds": 15,
+    "stem": "The senator's speech was so ______ that even her opponents praised its clarity.",
+    "choices": [
+      "lucid",
+      "verbose",
+      "hesitant",
+      "obscure"
+    ],
+    "correct_index": 0,
+    "explanation": "The clue is 'clarity'. 'Lucid' means clear and easy to follow.",
+    "reviewed": false
+  },
+  {
+    "id": "w-007",
+    "section": "reading",
+    "skill": "vocabulary-in-context",
+    "difficulty": 4,
+    "tier": "gate",
+    "four_d": "description",
+    "time_target_seconds": 15,
+    "stem": "Far from being ______, the scientist's claim had been tested in dozens of independent labs.",
+    "choices": [
+      "speculative",
+      "rigorous",
+      "celebrated",
+      "obsolete"
+    ],
+    "correct_index": 0,
+    "explanation": "'Far from being' signals the opposite of what follows. A claim tested many times is the opposite of 'speculative', meaning based on guesswork.",
+    "reviewed": false
+  },
+  {
+    "id": "w-008",
+    "section": "reading",
+    "skill": "vocabulary-in-context",
+    "difficulty": 2,
+    "tier": "gate",
+    "four_d": "description",
+    "time_target_seconds": 15,
+    "stem": "In 'The coach's plan was sound,' the word 'sound' most nearly means:",
+    "choices": [
+      "noisy",
+      "reasonable",
+      "asleep",
+      "complete"
+    ],
+    "correct_index": 1,
+    "explanation": "A plan described as sound is well reasoned. Replace the word with each choice and keep the one that makes sense.",
+    "reviewed": false
+  },
+  {
+    "id": "w-009",
+    "section": "writing",
+    "skill": "form-structure-sense",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "Both ______ findings surprised the review board.",
+    "choices": [
+      "researcher's",
+      "researchers'",
+      "researchers",
+      "researchers's"
+    ],
+    "correct_index": 1,
+    "explanation": "'Both' means more than one researcher, and the findings belong to them, so use the plural possessive: researchers'.",
+    "reviewed": false
+  },
+  {
+    "id": "w-010",
+    "section": "writing",
+    "skill": "form-structure-sense",
+    "difficulty": 4,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "Walking into the gallery, ______",
+    "choices": [
+      "the paintings impressed Lena.",
+      "Lena was impressed by the paintings.",
+      "the paintings were impressive to Lena.",
+      "impressive paintings greeted Lena."
+    ],
+    "correct_index": 1,
+    "explanation": "The person doing the walking must come right after the comma. Paintings can't walk, so Lena has to be the subject.",
+    "reviewed": false
+  },
+  {
+    "id": "w-011",
+    "section": "reading",
+    "skill": "vocabulary-in-context",
+    "difficulty": 5,
+    "tier": "gate",
+    "four_d": "description",
+    "time_target_seconds": 15,
+    "stem": "The novelist's later work has a ______ style: every sentence is pared down, with no word wasted.",
+    "choices": [
+      "laconic",
+      "florid",
+      "meandering",
+      "whimsical"
+    ],
+    "correct_index": 0,
+    "explanation": "The colon says the blank is defined by what follows. 'Laconic' means using very few words.",
+    "reviewed": false
+  },
+  {
+    "id": "w-012",
+    "section": "writing",
+    "skill": "form-structure-sense",
+    "difficulty": 3,
+    "tier": "gate",
+    "four_d": "diligence",
+    "time_target_seconds": 15,
+    "stem": "By the time the rescue team arrived, the hikers ______ for nearly two days.",
+    "choices": [
+      "wait",
+      "have waited",
+      "had been waiting",
+      "will wait"
+    ],
+    "correct_index": 2,
+    "explanation": "The waiting happened before another past event (the arrival), so use the past perfect: 'had been waiting'.",
+    "reviewed": false
+  },
+  {
+    "id": "w-013",
+    "section": "writing",
+    "skill": "form-structure-sense",
+    "difficulty": 4,
+    "tier": "gate",
+    "four_d": "discernment",
+    "time_target_seconds": 15,
+    "stem": "The population of Tokyo is larger than ______.",
+    "choices": [
+      "any city in Europe",
+      "that of any city in Europe",
+      "any European city's people",
+      "Europe"
+    ],
+    "correct_index": 1,
+    "explanation": "Compare like with like: a population to a population. 'That of' stands for 'the population of'.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s01",
+    "section": "reading",
+    "skill": "central-ideas",
+    "difficulty": 3,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "passage": "Urban beekeeping has grown quickly in many cities, and supporters say rooftop hives help pollinate city gardens. Some ecologists, however, warn that adding large numbers of honeybees can crowd out native bees, which compete for the same limited flowers. They suggest that planting more kinds of flowering plants may do more for pollinators than adding hives.",
+    "stem": "Which choice best states the main idea of the text?",
+    "choices": [
+      "Urban beekeeping is banned in most cities.",
+      "Some ecologists caution that adding honeybee hives may not be the best way to help city pollinators.",
+      "Honeybees pollinate flowers more efficiently than native bees do.",
+      "Rooftop gardens cannot survive without honeybees."
+    ],
+    "correct_index": 1,
+    "explanation": "The text sets up a popular idea and then gives the ecologists' warning and alternative. The main idea is that caution, not a detail.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s02",
+    "section": "reading",
+    "skill": "inferences",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "passage": "Researchers gave two groups of students the same set of math problems. One group was told the problems measured natural talent; the other was told they measured skills that improve with practice. Students in the second group attempted more of the difficult problems. This suggests that ______",
+    "stem": "Which choice most logically completes the text?",
+    "choices": [
+      "the problems given to the second group were easier.",
+      "how students understand a task's purpose may affect how long they persist with it.",
+      "natural talent has no effect on math performance.",
+      "students in the first group were less skilled at math."
+    ],
+    "correct_index": 1,
+    "explanation": "Both groups got the same problems, so the only difference was what they were told. The conclusion must stay within what that difference can show.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s03",
+    "section": "reading",
+    "skill": "command-of-evidence-textual",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "stem": "A student claims that the narrator of a story values independence over comfort. Which quotation from the story most directly supports the claim?",
+    "choices": [
+      "\"I left the warm house before dawn, preferring a cold road I had chosen to a soft bed someone else had made.\"",
+      "\"The kitchen always smelled of bread and coffee.\"",
+      "\"My brother laughed whenever I tripped over the doorstep.\"",
+      "\"In winter, the river froze so thick that wagons could cross it.\""
+    ],
+    "correct_index": 0,
+    "explanation": "Only the first quotation sets comfort (warm house, soft bed) against a choice the narrator makes for themself, which is exactly the claim.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s04",
+    "section": "reading",
+    "skill": "command-of-evidence-quantitative",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "diligence",
+    "time_target_seconds": 75,
+    "passage": "A survey recorded the share of students who read for fun at least once a week: 42% in 2015, 38% in 2018, 31% in 2021, and 33% in 2024.",
+    "stem": "A researcher claims that weekly reading for fun declined steadily from 2015 to 2024. Which choice best describes the data in relation to the claim?",
+    "choices": [
+      "It supports the claim, because each survey year was lower than the one before.",
+      "It weakens the claim, because the share rose slightly from 2021 to 2024.",
+      "It supports the claim, because the 2024 share was lower than the 2015 share.",
+      "It weakens the claim, because the share never fell below 40%."
+    ],
+    "correct_index": 1,
+    "explanation": "'Steadily' means every step goes down. Check each pair: 31% to 33% is a rise, so the data do not fully support the claim.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s05",
+    "section": "reading",
+    "skill": "text-structure-purpose",
+    "difficulty": 3,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "passage": "Many people assume that deserts are lifeless. Yet after a rare heavy rain, the Atacama Desert in Chile can burst into bloom, covering miles of ground with purple and pink flowers. Seeds that lay dormant in the soil for years sprout within days.",
+    "stem": "Which choice best describes the overall structure of the text?",
+    "choices": [
+      "It presents a common belief and then gives an example that challenges it.",
+      "It compares two deserts and explains why one gets more rain.",
+      "It describes an experiment and reports its results.",
+      "It argues that deserts should be protected from development."
+    ],
+    "correct_index": 0,
+    "explanation": "'Many people assume' introduces a belief; 'Yet' turns to the blooming desert as a counterexample.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s06",
+    "section": "reading",
+    "skill": "cross-text-connections",
+    "difficulty": 5,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "passage": "Text 1: Some historians argue that the printing press spread new ideas mainly by lowering the cost of books.\nText 2: Cost alone cannot explain the press's impact. Because it produced identical copies, scholars in distant cities could cite the same page and correct the same errors, building knowledge they shared.",
+    "stem": "Based on the texts, how would the author of Text 2 most likely respond to the view in Text 1?",
+    "choices": [
+      "By agreeing that lower cost was the only important effect of the press.",
+      "By arguing that the press's influence also depended on producing identical copies that scholars could share.",
+      "By claiming that books became more expensive after the press appeared.",
+      "By denying that the printing press spread new ideas."
+    ],
+    "correct_index": 1,
+    "explanation": "Text 2 says cost 'alone' cannot explain the impact, so it accepts cost as a factor and adds identical copies as another.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s07",
+    "section": "writing",
+    "skill": "rhetorical-synthesis",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "delegation",
+    "time_target_seconds": 75,
+    "passage": "While researching a topic, a student took these notes:\n• The axolotl is a salamander native to lakes near Mexico City.\n• It can regrow lost limbs and parts of its heart and brain.\n• Scientists study it to learn how tissue regeneration might work in humans.\n• Wild populations are critically endangered.",
+    "stem": "The student wants to emphasize why scientists are interested in the axolotl. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "The axolotl, a salamander native to lakes near Mexico City, is critically endangered in the wild.",
+      "Because the axolotl can regrow limbs and even parts of its heart and brain, scientists study it to learn how tissue regeneration might work in humans.",
+      "The axolotl is a salamander that lives in lakes.",
+      "Wild axolotls live near Mexico City, where some scientists work."
+    ],
+    "correct_index": 1,
+    "explanation": "Start from the goal, not the notes. Only the second choice names the ability and the reason scientists study it.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s08",
+    "section": "writing",
+    "skill": "rhetorical-synthesis",
+    "difficulty": 3,
+    "tier": "session",
+    "four_d": "delegation",
+    "time_target_seconds": 75,
+    "passage": "While researching a topic, a student took these notes:\n• A town compared two ways of reducing summer heat downtown.\n• Planting street trees lowered sidewalk temperatures by about 6°F.\n• Painting roofs white lowered indoor temperatures in nearby buildings by about 3°F.\n• Trees cost more to maintain each year.",
+    "stem": "The student wants to compare the cooling effects of the two methods. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Street trees lowered sidewalk temperatures by about 6°F, while white roofs lowered nearby indoor temperatures by about 3°F.",
+      "Street trees cost more to maintain each year than white roofs.",
+      "The town wanted to reduce summer heat downtown.",
+      "White roofs were one of the methods the town studied."
+    ],
+    "correct_index": 0,
+    "explanation": "A comparison of cooling effects needs both methods and both temperature results. Cost is true but answers a different goal.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s09",
+    "section": "reading",
+    "skill": "vocabulary-in-context",
+    "difficulty": 4,
+    "tier": "session",
+    "four_d": "description",
+    "time_target_seconds": 75,
+    "passage": "The committee's report was notable less for its findings than for its candor: it openly listed the mistakes the agency had made and the warnings it had ignored.",
+    "stem": "As used in the text, what does the word 'candor' most nearly mean?",
+    "choices": [
+      "frankness",
+      "length",
+      "caution",
+      "popularity"
+    ],
+    "correct_index": 0,
+    "explanation": "The sentence explains 'candor' right after the colon: the report openly listed mistakes and ignored warnings. That is frankness.",
+    "reviewed": false
+  },
+  {
+    "id": "r-s10",
+    "section": "reading",
+    "skill": "inferences",
+    "difficulty": 5,
+    "tier": "session",
+    "four_d": "discernment",
+    "time_target_seconds": 75,
+    "passage": "Early telescopes could not resolve the faint, distant galaxy clusters that astronomers now catalog routinely. Some nineteenth-century astronomers therefore concluded that such clusters did not exist. Modern observations suggest that ______",
+    "stem": "Which choice most logically completes the text?",
+    "choices": [
+      "the astronomers' conclusion reflected the limits of their instruments rather than the absence of the clusters.",
+      "nineteenth-century telescopes were more powerful than modern ones.",
+      "galaxy clusters formed only after the nineteenth century.",
+      "astronomers no longer catalog galaxy clusters."
+    ],
+    "correct_index": 0,
+    "explanation": "Not seeing something with a weak tool is different from it not existing. Modern telescopes see the clusters, so the earlier conclusion came from the tool's limits.",
+    "reviewed": false
   }
 ]

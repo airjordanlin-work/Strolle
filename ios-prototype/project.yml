@@ -1,0 +1,70 @@
+# XcodeGen spec: `brew install xcodegen && xcodegen` generates Strolle.xcodeproj.
+# All four targets share Strolle.entitlements so the App Group can't drift.
+name: Strolle
+options:
+  bundleIdPrefix: com.strolle.prototype
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""          # set to your team ID
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_ENTITLEMENTS: Strolle.entitlements
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1"
+
+targets:
+  Strolle:
+    type: application
+    platform: iOS
+    sources:
+      - StrolleApp
+      - Shared
+      - path: ../app/assets/questions.json   # same bank the Flutter app uses
+        buildPhase: resources
+    info:
+      path: StrolleApp/Info.plist
+      properties:
+        CFBundleDisplayName: Strolle
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    dependencies:
+      - target: ShieldConfiguration
+      - target: ShieldAction
+      - target: DeviceActivityMonitor
+
+  ShieldConfiguration:
+    type: app-extension
+    platform: iOS
+    sources: [ShieldConfiguration, Shared]
+    info:
+      path: ShieldConfiguration/Info.plist
+      properties:
+        CFBundleDisplayName: Strolle Shield
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.ManagedSettingsUI.shield-configuration-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShieldConfigurationExtension
+
+  ShieldAction:
+    type: app-extension
+    platform: iOS
+    sources: [ShieldAction, Shared]
+    info:
+      path: ShieldAction/Info.plist
+      properties:
+        CFBundleDisplayName: Strolle Shield Action
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.ManagedSettings.shield-action-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShieldActionExtension
+
+  DeviceActivityMonitor:
+    type: app-extension
+    platform: iOS
+    sources: [DeviceActivityMonitor, Shared]
+    info:
+      path: DeviceActivityMonitor/Info.plist
+      properties:
+        CFBundleDisplayName: Strolle Monitor
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.deviceactivity.monitor-extension
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PassMonitorExtension
