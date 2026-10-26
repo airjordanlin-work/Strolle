@@ -12,11 +12,12 @@
 // is out of scope here — a separate function owns that. The upsert below
 // leaves those columns out, so an existing row keeps them and a new row
 // gets the column defaults.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import questionData from "./questions.json" with { type: "json" };
+import { answerWeight, type BankItem, updateAbility } from "../_shared/adaptive.ts";
 
-type StoredQuestion = { id: string; choices: string[]; correct_index: number };
-const questions = questionData as StoredQuestion[];
+type StoredQuestion = BankItem & { choices: string[]; correct_index: number };
+const questions = questionData as unknown as StoredQuestion[];
 
 const GROWTH_FACTOR = 2.5;
 const RESET_INTERVAL_MINUTES = 10;
@@ -108,6 +109,29 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "profile platform not set" }, 400);
   }
 
+  const { data: existingItem, error: itemFetchError } = await db
+    .from("review_items")
+    .select("interval_minutes, consecutive_correct")
+    .eq("user_id", userId)
+    .eq("question_id", question_id)
+    .maybeSingle();
+  if (itemFetchError) {
+    return jsonResponse({ error: "failed to read review item" }, 500);
+  }
+
+  let intervalMinutes = existingItem?.interval_minutes ??
+    RESET_INTERVAL_MINUTES;
+  let consecutiveCorrect = existingItem?.consecutive_correct ?? 0;
+
+  if (correct) {
+    consecutiveCorrect += 1;
+    const grown = Math.round(intervalMinutes * GROWTH_FACTOR);
+    intervalMinutes = Math.min(grown, CAP_MINUTES);
+  } else {
+    consecutiveCorrect = 0;
+    intervalMinutes = RESET_INTERVAL_MINUTES;
+  }
+
   const dueAt = new Date(now.getTime() + intervalMinutes * 60_000);
 
   const { error: reviewError } = await db
@@ -139,8 +163,14 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "failed to update pass state" }, 500);
   }
 
+  // Adaptive bookkeeping. The pass is already granted above and must not
+  // depend on this, so a failure here is logged, not returned.
+  const adaptive = await recordAdaptive(db, userId, question, correct, now);
+
   return jsonResponse({
     correct,
+    skill: question.skill,
+    counted_toward_skill: adaptive?.weight ?? null,
     pass_expires_at: passExpiresAt.toISOString(),
     review_item: {
       question_id,
@@ -150,3 +180,75 @@ Deno.serve(async (req) => {
     },
   });
 });
+
+// Closes the attempt that start-attempt opened (its started_at gives a
+// server-side response time) and moves the user's rating for the
+// question's skill. An answer with no open attempt (an old client that
+// never called start-attempt) is logged without a response time and
+// scored at full weight, since there is nothing to call it a guess by.
+//
+// Read-modify-write on skill_ability: two simultaneous answers from one
+// user could lose an update. A gate answers one question at a time, so
+// that is accepted for now; move it into a Postgres function if it bites.
+async function recordAdaptive(
+  db: SupabaseClient,
+  userId: string,
+  question: StoredQuestion,
+  correct: boolean,
+  now: Date,
+): Promise<{ weight: number } | null> {
+  try {
+    const { data: open } = await db
+      .from("attempts")
+      .select("id, started_at")
+      .eq("user_id", userId)
+      .eq("question_id", question.id)
+      .is("answered_at", null)
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const responseMs = open
+      ? Math.max(0, now.getTime() - new Date(open.started_at).getTime())
+      : undefined;
+
+    const { data: row } = await db
+      .from("skill_ability")
+      .select("rating, attempts")
+      .eq("user_id", userId)
+      .eq("skill", question.skill)
+      .maybeSingle();
+    const before = row ?? { rating: 0, attempts: 0 };
+    const weight = answerWeight(before, question, correct, responseMs);
+    const after = updateAbility(before, question, correct, weight);
+
+    if (weight > 0) {
+      const { error } = await db.from("skill_ability").upsert({
+        user_id: userId,
+        skill: question.skill,
+        rating: after.rating,
+        attempts: after.attempts,
+        updated_at: now.toISOString(),
+      }, { onConflict: "user_id,skill" });
+      if (error) throw error;
+    }
+
+    const attempt = {
+      answered_at: now.toISOString(),
+      result: correct ? "correct" : "incorrect",
+      response_time_ms: responseMs === undefined ? null : Math.round(responseMs),
+    };
+    const { error } = open
+      ? await db.from("attempts").update(attempt).eq("id", open.id)
+      : await db.from("attempts").insert({
+        user_id: userId,
+        question_id: question.id,
+        started_at: now.toISOString(),
+        ...attempt,
+      });
+    if (error) throw error;
+    return { weight };
+  } catch (e) {
+    console.error("grade-attempt: adaptive bookkeeping failed", e);
+    return null;
+  }
+}
