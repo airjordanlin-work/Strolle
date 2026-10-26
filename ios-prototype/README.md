@@ -39,15 +39,33 @@ Controls works for development builds on your own device; TestFlight
 needs Apple's approval of the entitlement request.
 
 1. `brew install xcodegen`, then `cd ios-prototype && xcodegen`.
-2. Open `Strolle.xcodeproj`. In `project.yml` (or each target's Signing
-   tab) set your team and a bundle prefix you own.
-3. Replace `group.com.strolle.prototype` in **both** `Strolle.entitlements`
-   and `Shared/AppGroup.swift` with your own App Group. They must match
+2. Open `Strolle.xcodeproj` and set your team on each target's Signing
+   tab (`DEVELOPMENT_TEAM` is left empty in `project.yml`).
+3. Register the identifiers below in Apple Developer first. The bundle IDs
+   are set explicitly in `project.yml` and the App Group is in
+   `Strolle.entitlements` and `Shared/AppGroup.swift`; they must match
    exactly or the shield silently won't apply.
 4. Add the Family Controls and App Groups capabilities to all four
    targets if Xcode doesn't pick them up from the entitlements file.
 5. Run on the device. Allow Screen Time access, allow notifications,
    choose apps, then open one of them.
+
+## Identifiers to register (Apple Developer > Identifiers)
+
+App IDs (explicit, each with **Family Controls (Distribution)** and
+**App Groups** capabilities, all four assigned to the App Group below):
+
+| Target | Bundle ID |
+| --- | --- |
+| Strolle (app) | `com.strolleapp.strolle` |
+| ShieldConfiguration | `com.strolleapp.strolle.ShieldConfiguration` |
+| ShieldAction | `com.strolleapp.strolle.ShieldAction` |
+| DeviceActivityMonitor | `com.strolleapp.strolle.DeviceActivityMonitor` |
+
+App Group: `group.com.strolleapp.strolle`
+
+Family Controls must be enabled per App ID; Apple granted the entitlement
+for the account, but each of the four IDs needs it switched on.
 
 ## Known gaps
 

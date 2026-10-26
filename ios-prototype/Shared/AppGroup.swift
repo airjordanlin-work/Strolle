@@ -7,7 +7,7 @@ import DeviceActivity
 /// never takes effect, so they live in one file compiled into all four.
 enum AppGroup {
     /// Change this (and the entitlements) to your own team's group.
-    static let id = "group.com.strolle.prototype"
+    static let id = "group.com.strolleapp.strolle"
 
     static var defaults: UserDefaults {
         guard let d = UserDefaults(suiteName: id) else {

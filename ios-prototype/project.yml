@@ -2,12 +2,12 @@
 # All four targets share Strolle.entitlements so the App Group can't drift.
 name: Strolle
 options:
-  bundleIdPrefix: com.strolle.prototype
+  bundleIdPrefix: com.strolleapp
   deploymentTarget:
     iOS: "16.0"
 settings:
   base:
-    DEVELOPMENT_TEAM: ""          # set to your team ID
+    DEVELOPMENT_TEAM: ""          # set in Xcode (Signing & Capabilities)
     CODE_SIGN_STYLE: Automatic
     CODE_SIGN_ENTITLEMENTS: Strolle.entitlements
     SWIFT_VERSION: "5.9"
@@ -17,6 +17,9 @@ targets:
   Strolle:
     type: application
     platform: iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.strolleapp.strolle
     sources:
       - StrolleApp
       - Shared
@@ -36,6 +39,9 @@ targets:
   ShieldConfiguration:
     type: app-extension
     platform: iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.strolleapp.strolle.ShieldConfiguration
     sources: [ShieldConfiguration, Shared]
     info:
       path: ShieldConfiguration/Info.plist
@@ -48,6 +54,9 @@ targets:
   ShieldAction:
     type: app-extension
     platform: iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.strolleapp.strolle.ShieldAction
     sources: [ShieldAction, Shared]
     info:
       path: ShieldAction/Info.plist
@@ -60,6 +69,9 @@ targets:
   DeviceActivityMonitor:
     type: app-extension
     platform: iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.strolleapp.strolle.DeviceActivityMonitor
     sources: [DeviceActivityMonitor, Shared]
     info:
       path: DeviceActivityMonitor/Info.plist
