@@ -1,7 +1,7 @@
 // Called when the gate opens, before any question is shown. Advances
 // pass_state's rolling-hour entry window and returns how many questions
 // are owed for this entry. This is the only function allowed to write
-// pass_state.entries_this_hour / hour_window_started — grade-attempt
+// pass_state.entries_this_window / window_started_at — grade-attempt
 // owns pass_expires_at and review_items, and this function never
 // touches either.
 //
@@ -51,30 +51,50 @@ Deno.serve(async (req) => {
 
   const { data: existing, error: fetchError } = await db
     .from("pass_state")
-    .select("entries_this_hour, hour_window_started")
+    .select("entries_this_window, window_started_at, platform")
     .eq("user_id", userId)
     .maybeSingle();
   if (fetchError) {
     return jsonResponse({ error: "failed to read pass state" }, 500);
   }
 
-  const windowStarted = existing?.hour_window_started
-    ? new Date(existing.hour_window_started)
+  // pass_state.platform is NOT NULL with no default, so a first-time
+  // insert takes it from the profile. Existing rows keep theirs.
+  let platform = existing?.platform;
+  if (!platform) {
+    const { data: profile, error: profileError } = await db
+      .from("profiles")
+      .select("platform")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profileError) {
+      return jsonResponse({ error: "failed to read profile" }, 500);
+    }
+    platform = profile?.platform;
+  }
+  if (!platform) {
+    return jsonResponse({ error: "profile platform not set" }, 400);
+  }
+
+  const windowStarted = existing?.window_started_at
+    ? new Date(existing.window_started_at)
     : null;
   const windowExpired = !windowStarted ||
     now.getTime() - windowStarted.getTime() >= WINDOW_MS;
 
   const entriesThisHour = windowExpired
     ? 1
-    : (existing?.entries_this_hour ?? 0) + 1;
+    : (existing?.entries_this_window ?? 0) + 1;
   const windowStartedAt = windowExpired ? now : windowStarted;
 
   const { error: writeError } = await db
     .from("pass_state")
     .upsert({
       user_id: userId,
-      entries_this_hour: entriesThisHour,
-      hour_window_started: windowStartedAt.toISOString(),
+      platform,
+      entries_this_window: entriesThisHour,
+      window_started_at: windowStartedAt.toISOString(),
+      updated_at: now.toISOString(),
     }, { onConflict: "user_id" });
   if (writeError) {
     return jsonResponse({ error: "failed to update pass state" }, 500);

@@ -9,7 +9,9 @@
 // needs to stay in sync with the app bundle by hand until then.
 //
 // Escalating-cost / rolling-window state (pass_state.entries_this_window)
-// is out of scope here — a separate function owns that.
+// is out of scope here — a separate function owns that. The upsert below
+// leaves those columns out, so an existing row keeps them and a new row
+// gets the column defaults.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import questionData from "./questions.json" with { type: "json" };
 
@@ -79,24 +81,31 @@ Deno.serve(async (req) => {
 
   const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  const { data: existingItem } = await db
-    .from("review_items")
-    .select("interval_minutes, consecutive_correct")
+  // pass_state may not exist yet (register-entry creates it, but a client
+  // can grade first). Resolve platform (pass_state, else profile) up
+  // front so a missing one is rejected before review_items is touched.
+  const { data: passRow, error: passFetchError } = await db
+    .from("pass_state")
+    .select("platform")
     .eq("user_id", userId)
-    .eq("question_id", question_id)
     .maybeSingle();
-
-  let intervalMinutes = existingItem?.interval_minutes ??
-    RESET_INTERVAL_MINUTES;
-  let consecutiveCorrect = existingItem?.consecutive_correct ?? 0;
-
-  if (correct) {
-    consecutiveCorrect += 1;
-    const grown = Math.round(intervalMinutes * GROWTH_FACTOR);
-    intervalMinutes = Math.min(grown, CAP_MINUTES);
-  } else {
-    consecutiveCorrect = 0;
-    intervalMinutes = RESET_INTERVAL_MINUTES;
+  if (passFetchError) {
+    return jsonResponse({ error: "failed to read pass state" }, 500);
+  }
+  let platform = passRow?.platform;
+  if (!platform) {
+    const { data: profile, error: profileError } = await db
+      .from("profiles")
+      .select("platform")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profileError) {
+      return jsonResponse({ error: "failed to read profile" }, 500);
+    }
+    platform = profile?.platform;
+  }
+  if (!platform) {
+    return jsonResponse({ error: "profile platform not set" }, 400);
   }
 
   const dueAt = new Date(now.getTime() + intervalMinutes * 60_000);
@@ -120,11 +129,12 @@ Deno.serve(async (req) => {
 
   const { error: passError } = await db
     .from("pass_state")
-    .update({
+    .upsert({
+      user_id: userId,
+      platform,
       pass_expires_at: passExpiresAt.toISOString(),
       updated_at: now.toISOString(),
-    })
-    .eq("user_id", userId);
+    }, { onConflict: "user_id" });
   if (passError) {
     return jsonResponse({ error: "failed to update pass state" }, 500);
   }
