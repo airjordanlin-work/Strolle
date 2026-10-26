@@ -13,10 +13,28 @@ struct Question: Decodable, Identifiable, Equatable {
     let choices: [String]
     let correctIndex: Int
     let explanation: String?
+    /// 1 (easiest) to 5. Only used to scale the cosmetic XP; the bank always
+    /// carries it, but a missing value reads as mid-difficulty.
+    let difficulty: Int
 
     enum CodingKeys: String, CodingKey {
-        case id, section, skill, tier, stem, choices, explanation
+        case id, section, skill, tier, stem, choices, explanation, difficulty
         case correctIndex = "correct_index"
+    }
+}
+
+extension Question {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        section = try c.decode(String.self, forKey: .section)
+        skill = try c.decode(String.self, forKey: .skill)
+        tier = try c.decode(Tier.self, forKey: .tier)
+        stem = try c.decode(String.self, forKey: .stem)
+        choices = try c.decode([String].self, forKey: .choices)
+        correctIndex = try c.decode(Int.self, forKey: .correctIndex)
+        explanation = try c.decodeIfPresent(String.self, forKey: .explanation)
+        difficulty = try c.decodeIfPresent(Int.self, forKey: .difficulty) ?? 3
     }
 }
 
