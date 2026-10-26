@@ -13,6 +13,34 @@ create table skills (
   sat_weight real not null check (sat_weight >= 0)
 );
 
+-- The questions table itself. 0001 no longer creates it (e111db7 removed
+-- it when the schema moved to text question ids), so the bank migration
+-- owns it. Definition is the original from 2767237; the alter below adds
+-- the bank columns on top.
+create type question_tier as enum ('gate', 'session');
+
+create table questions (
+  id            uuid primary key default gen_random_uuid(),
+  section       text not null,
+  skill         text not null,
+  difficulty    int  not null check (difficulty between 1 and 5),
+  tier          question_tier not null,
+  stem          text not null,
+  choices       jsonb not null,
+  correct_index int  not null,
+  explanation   text not null,
+  reviewed      bool not null default false,
+  created_at    timestamptz not null default now()
+);
+
+-- Nothing circulates until a human approves it.
+create index on questions (tier, reviewed) where reviewed;
+
+alter table questions enable row level security;
+
+create policy reviewed_questions_readable on questions
+  for select using (reviewed = true);
+
 alter table questions
   -- Stable content id (e.g. 'm-001') so bank files and review history
   -- can refer to the same item across reseeds.
