@@ -67,6 +67,15 @@ App Group: `group.com.strolleapp.strolle`
 Family Controls must be enabled per App ID; Apple granted the entitlement
 for the account, but each of the four IDs needs it switched on.
 
+## Gate rewards
+
+The gate has haptics, a chime, an XP bar with levels, a combo multiplier,
+a daily-streak flame and a "+N min unlocked" moment (`Rewards.swift`,
+`Feedback.swift`, `RewardViews.swift`). They are cosmetic: XP and streak
+live in UserDefaults until the backend stores them, XP scales with
+difficulty and never with speed, and pass length is untouched. Asset
+sources are in `ASSETS.md`. Unit tests: `StrolleTests/`.
+
 ## Known gaps
 
 - **State is on-device.** CLAUDE.md requires server-authoritative pass

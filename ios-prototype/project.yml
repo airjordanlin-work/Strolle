@@ -36,6 +36,13 @@ targets:
       - target: ShieldAction
       - target: DeviceActivityMonitor
 
+  StrolleTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [StrolleTests]
+    dependencies:
+      - target: Strolle
+
   ShieldConfiguration:
     type: app-extension
     platform: iOS

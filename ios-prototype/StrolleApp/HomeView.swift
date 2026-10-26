@@ -4,6 +4,7 @@ import FamilyControls
 /// The calm surface: set up Screen Time, choose apps, see pass state.
 struct HomeView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var rewards: RewardStore
     @State private var pickerShown = false
     @State private var draft = FamilyActivitySelection()
 
@@ -14,6 +15,15 @@ struct HomeView: View {
                     Text("Pick the apps you scroll too much. Opening one asks you a quick SAT question first.")
                         .font(.system(.title3, design: .serif))
                         .padding(.vertical, 8)
+                }
+
+                Section("Progress") {
+                    XPBar(level: rewards.level, dailyXP: rewards.dailyXP, progress: rewards.dailyProgress)
+                    HStack {
+                        StreakFlame(days: rewards.dayStreak)
+                        Text("day streak")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
 
                 Section("Screen Time") {
