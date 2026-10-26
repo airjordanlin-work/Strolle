@@ -28,7 +28,18 @@ decisions still hold.
 - **System design doc**: "Strolle System Design" in the Claude project
   (latency budget, scaling plan, roadmap).
 
+- **start-attempt** Edge Function: picks the next question with the adaptive
+  selector (diagnostic for new users, weak skills weighted by SAT domain,
+  same-skill run cap, mastered-skill mix) and opens an `attempts` row.
+  grade-attempt now updates `skill_ability` and closes that attempt.
+
 ## Open or in progress
+
+- **Migration 0002 fails on a clean database.** It alters `questions`, which
+  no migration creates (`relation "questions" does not exist`), so a fresh
+  `supabase db reset` stops there. The bank is served from the bundled JSON
+  for now, so the fix is either dropping the `alter table questions` part or
+  creating the table first. Needs the migration owner.
 
 - **Schema mismatches in grade-attempt.** It writes
   `review_items.consecutive_correct`, but the column is `streak`. It writes
