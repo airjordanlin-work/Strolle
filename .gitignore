@@ -27,3 +27,7 @@ backend/supabase/.temp/
 __pycache__/
 *.pyc
 .venv/
+
+# Generated question staging (review locally, promote by hand)
+pipeline/staging/*
+!pipeline/staging/.gitkeep
