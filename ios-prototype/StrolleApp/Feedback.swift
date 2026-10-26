@@ -13,9 +13,9 @@ final class GateFeedback: ObservableObject {
     private let medium = UIImpactFeedbackGenerator(style: .medium)
     private var player: AVAudioPlayer?
 
-    private let correctChime = Self.wav(notes: [(659.25, 0.12), (880.0, 0.28)], volume: 0.5)
-    private let missTone = Self.wav(notes: [(392.0, 0.30)], volume: 0.25)
-    private let levelUpChime = Self.wav(notes: [(523.25, 0.10), (659.25, 0.10), (783.99, 0.10), (1046.5, 0.35)], volume: 0.5)
+    private let correctChime = GateFeedback.wav(notes: [(659.25, 0.12), (880.0, 0.28)], volume: 0.5)
+    private let missTone = GateFeedback.wav(notes: [(392.0, 0.30)], volume: 0.25)
+    private let levelUpChime = GateFeedback.wav(notes: [(523.25, 0.10), (659.25, 0.10), (783.99, 0.10), (1046.5, 0.35)], volume: 0.5)
 
     init() {
         // .ambient respects the silent switch and mixes with other audio.
