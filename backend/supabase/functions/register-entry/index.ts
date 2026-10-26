@@ -13,7 +13,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { costForEntry } from "./cost.ts";
 
-const PLATFORMS = ["ios", "android"];
 const WINDOW_MS = 60 * 60 * 1000;
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -47,13 +46,6 @@ Deno.serve(async (req) => {
   }
   const userId = userData.user.id;
 
-  let payload: { platform?: string } = {};
-  try {
-    payload = await req.json();
-  } catch {
-    // Empty body is fine once a pass_state row exists.
-  }
-
   const now = new Date();
   const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -67,13 +59,21 @@ Deno.serve(async (req) => {
   }
 
   // pass_state.platform is NOT NULL with no default, so a first-time
-  // insert must carry one. Existing rows keep theirs.
-  const platform = existing?.platform ?? payload.platform;
-  if (!platform || !PLATFORMS.includes(platform)) {
-    return jsonResponse(
-      { error: "platform ('ios' | 'android') required on first entry" },
-      400,
-    );
+  // insert takes it from the profile. Existing rows keep theirs.
+  let platform = existing?.platform;
+  if (!platform) {
+    const { data: profile, error: profileError } = await db
+      .from("profiles")
+      .select("platform")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profileError) {
+      return jsonResponse({ error: "failed to read profile" }, 500);
+    }
+    platform = profile?.platform;
+  }
+  if (!platform) {
+    return jsonResponse({ error: "profile platform not set" }, 400);
   }
 
   const windowStarted = existing?.window_started_at

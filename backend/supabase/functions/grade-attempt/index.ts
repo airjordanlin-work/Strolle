@@ -56,11 +56,7 @@ Deno.serve(async (req) => {
   }
   const userId = userData.user.id;
 
-  let payload: {
-    question_id?: string;
-    choice_index?: number;
-    platform?: string;
-  };
+  let payload: { question_id?: string; choice_index?: number };
   try {
     payload = await req.json();
   } catch {
@@ -86,8 +82,8 @@ Deno.serve(async (req) => {
   const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
   // pass_state may not exist yet (register-entry creates it, but a client
-  // can grade first). Resolve platform up front so a missing row is
-  // rejected before review_items is touched.
+  // can grade first). Resolve platform (pass_state, else profile) up
+  // front so a missing one is rejected before review_items is touched.
   const { data: passRow, error: passFetchError } = await db
     .from("pass_state")
     .select("platform")
@@ -96,34 +92,20 @@ Deno.serve(async (req) => {
   if (passFetchError) {
     return jsonResponse({ error: "failed to read pass state" }, 500);
   }
-  const platform = passRow?.platform ?? payload.platform;
-  if (platform !== "ios" && platform !== "android") {
-    return jsonResponse(
-      {
-        error: "platform ('ios' | 'android') required when no pass state exists",
-      },
-      400,
-    );
+  let platform = passRow?.platform;
+  if (!platform) {
+    const { data: profile, error: profileError } = await db
+      .from("profiles")
+      .select("platform")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profileError) {
+      return jsonResponse({ error: "failed to read profile" }, 500);
+    }
+    platform = profile?.platform;
   }
-
-  const { data: existingItem } = await db
-    .from("review_items")
-    .select("interval_minutes, consecutive_correct")
-    .eq("user_id", userId)
-    .eq("question_id", question_id)
-    .maybeSingle();
-
-  let intervalMinutes = existingItem?.interval_minutes ??
-    RESET_INTERVAL_MINUTES;
-  let consecutiveCorrect = existingItem?.consecutive_correct ?? 0;
-
-  if (correct) {
-    consecutiveCorrect += 1;
-    const grown = Math.round(intervalMinutes * GROWTH_FACTOR);
-    intervalMinutes = Math.min(grown, CAP_MINUTES);
-  } else {
-    consecutiveCorrect = 0;
-    intervalMinutes = RESET_INTERVAL_MINUTES;
+  if (!platform) {
+    return jsonResponse({ error: "profile platform not set" }, 400);
   }
 
   const dueAt = new Date(now.getTime() + intervalMinutes * 60_000);
