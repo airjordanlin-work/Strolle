@@ -9,9 +9,8 @@
 // needs to stay in sync with the app bundle by hand until then.
 //
 // Escalating-cost / rolling-window state (pass_state.entries_this_window)
-// is out of scope here — a separate function owns that. The upsert below
-// leaves those columns out, so an existing row keeps them and a new row
-// gets the column defaults.
+// is out of scope here — register-entry owns that, and also owns creating
+// the pass_state row, so this function only updates an existing one.
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import questionData from "./questions.json" with { type: "json" };
 import { answerWeight, type BankItem, updateAbility } from "../_shared/adaptive.ts";
@@ -63,6 +62,10 @@ Deno.serve(async (req) => {
   } catch {
     return jsonResponse({ error: "invalid JSON body" }, 400);
   }
+  // A literal JSON `null` (or array/primitive) parses but can't be destructured.
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+    return jsonResponse({ error: "body must be a JSON object" }, 400);
+  }
 
   const { question_id, choice_index } = payload;
   if (typeof question_id !== "string" || !Number.isInteger(choice_index)) {
@@ -82,31 +85,20 @@ Deno.serve(async (req) => {
 
   const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // pass_state may not exist yet (register-entry creates it, but a client
-  // can grade first). Resolve platform (pass_state, else profile) up
-  // front so a missing one is rejected before review_items is touched.
+  // register-entry owns creating pass_state and opening the entry window.
+  // Grading before it has run would otherwise have to create the row
+  // here, starting the rolling window without charging an entry, so
+  // reject instead — and before review_items is touched.
   const { data: passRow, error: passFetchError } = await db
     .from("pass_state")
-    .select("platform")
+    .select("user_id")
     .eq("user_id", userId)
     .maybeSingle();
   if (passFetchError) {
     return jsonResponse({ error: "failed to read pass state" }, 500);
   }
-  let platform = passRow?.platform;
-  if (!platform) {
-    const { data: profile, error: profileError } = await db
-      .from("profiles")
-      .select("platform")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (profileError) {
-      return jsonResponse({ error: "failed to read profile" }, 500);
-    }
-    platform = profile?.platform;
-  }
-  if (!platform) {
-    return jsonResponse({ error: "profile platform not set" }, 400);
+  if (!passRow) {
+    return jsonResponse({ error: "no entry registered; call register-entry first" }, 409);
   }
 
   const { data: existingItem, error: itemFetchError } = await db
@@ -153,12 +145,11 @@ Deno.serve(async (req) => {
 
   const { error: passError } = await db
     .from("pass_state")
-    .upsert({
-      user_id: userId,
-      platform,
+    .update({
       pass_expires_at: passExpiresAt.toISOString(),
       updated_at: now.toISOString(),
-    }, { onConflict: "user_id" });
+    })
+    .eq("user_id", userId);
   if (passError) {
     return jsonResponse({ error: "failed to update pass state" }, 500);
   }

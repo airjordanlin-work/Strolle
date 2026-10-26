@@ -46,6 +46,23 @@ Deno.serve(async (req) => {
   }
   const userId = userData.user.id;
 
+  // The body carries no fields today, so an empty body is fine. A body
+  // that is present must still be a JSON object: a literal `null` parses
+  // without error but is not usable, so it is rejected here as a 400
+  // rather than left to fail later.
+  const rawBody = await req.text();
+  if (rawBody.trim() !== "") {
+    let body: unknown;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return jsonResponse({ error: "invalid JSON body" }, 400);
+    }
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return jsonResponse({ error: "body must be a JSON object" }, 400);
+    }
+  }
+
   const now = new Date();
   const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -82,7 +99,7 @@ Deno.serve(async (req) => {
   const windowExpired = !windowStarted ||
     now.getTime() - windowStarted.getTime() >= WINDOW_MS;
 
-  const entriesThisHour = windowExpired
+  const entriesThisWindow = windowExpired
     ? 1
     : (existing?.entries_this_window ?? 0) + 1;
   const windowStartedAt = windowExpired ? now : windowStarted;
@@ -92,7 +109,7 @@ Deno.serve(async (req) => {
     .upsert({
       user_id: userId,
       platform,
-      entries_this_window: entriesThisHour,
+      entries_this_window: entriesThisWindow,
       window_started_at: windowStartedAt.toISOString(),
       updated_at: now.toISOString(),
     }, { onConflict: "user_id" });
@@ -101,8 +118,8 @@ Deno.serve(async (req) => {
   }
 
   return jsonResponse({
-    questions_owed: costForEntry(entriesThisHour),
-    entries_this_hour: entriesThisHour,
+    questions_owed: costForEntry(entriesThisWindow),
+    entries_this_window: entriesThisWindow,
     window_started_at: windowStartedAt.toISOString(),
   });
 });
