@@ -49,6 +49,15 @@ needs Apple's approval of the entitlement request.
 5. Run on the device. Allow Screen Time access, allow notifications,
    choose apps, then open one of them.
 
+## Gate rewards
+
+The gate has haptics, a chime, an XP bar with levels, a combo multiplier,
+a daily-streak flame and a "+N min unlocked" moment (`Rewards.swift`,
+`Feedback.swift`, `RewardViews.swift`). They are cosmetic: XP and streak
+live in UserDefaults until the backend stores them, XP scales with
+difficulty and never with speed, and pass length is untouched. Asset
+sources are in `ASSETS.md`. Unit tests: `StrolleTests/`.
+
 ## Known gaps
 
 - **State is on-device.** CLAUDE.md requires server-authoritative pass
